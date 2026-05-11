@@ -1,0 +1,4 @@
+# Жёсткие ограничения версий, чтобы не подтащило NumPy 2.x
+numpy<2.0
+opencv-python-headless<5
+paddleocr==2.7.0.3

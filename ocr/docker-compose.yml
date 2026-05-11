@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  paddleocr:
+    build: .
+    container_name: paddleocr
+    restart: unless-stopped
+    ports:
+      - "8868:8868"
+    volumes:
+      - /tmp:/tmp

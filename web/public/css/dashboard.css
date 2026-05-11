@@ -1,0 +1,401 @@
+/* ==========================================================================
+   WorkBangers CRM — Layout (Dark/Light Theme + Collapse)
+   ========================================================================== */
+
+/* -------------------------------------------------------
+   1. Основной Layout
+------------------------------------------------------- */
+.app-layout {
+	display: flex;
+	min-height: 100vh;
+	width: 100%;
+	background-color: var(--bg-body);
+}
+
+.main-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	margin-left: var(--sidebar-width);
+	transition: margin-left 0.3s ease;
+}
+
+html[data-sidebar="collapsed"] .sidebar ~ .main-content {
+	margin-left: var(--sidebar-collapsed-width);
+}
+
+/* -------------------------------------------------------
+   2. Sidebar (Боковое меню)
+------------------------------------------------------- */
+.sidebar {
+	width: var(--sidebar-width);
+	background-color: var(--bg-sidebar);
+	color: var(--text-main);
+	display: flex;
+	flex-direction: column;
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100vh;
+	z-index: 9999;
+	transition: width 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+	border-right: 1px dashed var(--border-color);
+}
+
+html[data-sidebar="collapsed"] .sidebar {
+	width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-header {
+	height: var(--topbar-height);
+	display: flex;
+	align-items: center;
+	padding: 0 1.5rem;
+	border-bottom: 1px dashed var(--border-color);
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+html[data-sidebar="collapsed"] .sidebar .sidebar-header {
+	padding: 0;
+	justify-content: center;
+}
+
+.sidebar-logo {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	color: var(--text-main);
+	font-weight: 700;
+	font-size: 1.25rem;
+}
+
+.sidebar-logo-icon {
+	width: 32px;
+	height: 32px;
+	background: var(--primary-color);
+	border-radius: var(--radius-sm);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.sidebar-logo-icon svg {
+	width: 20px;
+	height: 20px;
+	fill: white;
+}
+
+.sidebar-logo-text {
+	letter-spacing: -0.5px;
+	transition: opacity 0.3s;
+}
+
+html[data-sidebar="collapsed"] .sidebar .sidebar-logo-text {
+	opacity: 0;
+	display: none;
+}
+
+.sidebar-nav {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 1.5rem 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+html[data-sidebar="collapsed"] .sidebar .sidebar-nav {
+	padding: 1.5rem 0.5rem;
+}
+
+.sidebar-nav::-webkit-scrollbar { width: 4px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+
+.nav-section-title {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: var(--text-muted);
+	font-weight: 600;
+	margin: 1.5rem 0 0.5rem 0.5rem;
+	white-space: nowrap;
+}
+
+html[data-sidebar="collapsed"] .sidebar .nav-section-title {
+	display: none;
+}
+
+.nav-item {
+	display: flex;
+	align-items: center;
+	padding: 0.625rem 1rem;
+	color: var(--text-muted);
+	border-radius: var(--radius-md);
+	font-weight: 500;
+	font-size: 0.9375rem;
+	transition: all 0.2s ease;
+	white-space: nowrap;
+}
+
+html[data-sidebar="collapsed"] .sidebar .nav-item {
+	padding: 0.625rem;
+	justify-content: center;
+	border-radius: 50%;
+	width: 44px;
+	height: 44px;
+	margin: 0 auto;
+}
+
+.nav-item-icon {
+	width: 20px;
+	height: 20px;
+	margin-right: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+html[data-sidebar="collapsed"] .sidebar .nav-item-icon {
+	margin-right: 0;
+}
+
+.nav-item-icon svg {
+	width: 20px;
+	height: 20px;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	fill: none;
+}
+
+.nav-item-text {
+	transition: opacity 0.2s;
+}
+
+html[data-sidebar="collapsed"] .sidebar .nav-item-text {
+	display: none;
+}
+
+.nav-item:hover {
+	color: var(--primary-color);
+	background-color: var(--bg-hover);
+}
+
+.nav-item.active {
+	color: var(--primary-color);
+	background-color: var(--primary-light);
+	font-weight: 600;
+}
+
+.nav-item.active .nav-item-icon svg {
+	stroke: var(--primary-color);
+}
+
+.nav-divider {
+	height: 0;
+	border-top: 1px dashed var(--border-color);
+	margin: 1.5rem 0;
+}
+
+/* Профиль внизу сайдбара */
+.sidebar-profile {
+	padding: 1.25rem 1.5rem;
+	border-top: 1px dashed var(--border-color);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+html[data-sidebar="collapsed"] .sidebar .sidebar-profile {
+	padding: 1rem 0;
+	justify-content: center;
+}
+
+.sidebar-avatar {
+	width: 40px;
+	height: 40px;
+	background-color: var(--primary-light);
+	color: var(--primary-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 600;
+	font-size: 1.1rem;
+	border: 1px solid var(--primary-light);
+	flex-shrink: 0;
+}
+
+html[data-sidebar="collapsed"] .sidebar .sidebar-avatar {
+	width: 32px;
+	height: 32px;
+	font-size: 0.9rem;
+}
+
+.sidebar-user-info {
+	display: flex;
+	flex-direction: column;
+}
+
+html[data-sidebar="collapsed"] .sidebar .sidebar-user-info {
+	display: none;
+}
+
+.sidebar-user-name {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-main);
+}
+
+.sidebar-user-role {
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+/* -------------------------------------------------------
+   3. Topbar (Верхняя панель)
+------------------------------------------------------- */
+.topbar {
+	height: var(--topbar-height);
+	background-color: var(--bg-topbar);
+	border-bottom: 1px dashed var(--border-color);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 1.5rem;
+	position: sticky;
+	top: 0;
+	z-index: 900;
+	background-color: var(--bg-topbar);
+	transition: background-color 0.3s ease;
+}
+
+.topbar-left, .topbar-right {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.burger-btn, .theme-btn {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 0.5rem;
+	border-radius: var(--radius-md);
+	transition: background 0.2s, color 0.2s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.burger-btn {
+	display: none; /* Скрыто на десктопе */
+}
+
+.burger-btn:hover, .theme-btn:hover {
+	background-color: var(--bg-hover);
+	color: var(--text-main);
+}
+
+.burger-btn svg, .theme-btn svg {
+	width: 22px;
+	height: 22px;
+	stroke: currentColor;
+	stroke-width: 2;
+	fill: none;
+}
+
+.topbar-title h1 {
+	font-size: 1.125rem;
+	margin: 0;
+	color: var(--text-main);
+	font-weight: 600;
+}
+
+.topbar-title p {
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+	margin: 0;
+}
+
+/* -------------------------------------------------------
+   4. Content Area
+------------------------------------------------------- */
+.content-wrapper {
+	padding: 1.5rem;
+	flex: 1;
+}
+
+/* -------------------------------------------------------
+   5. Адаптивность (Mobile)
+------------------------------------------------------- */
+.sidebar-overlay {
+	display: none;
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 9998;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+	display: block;
+	opacity: 1;
+}
+
+@media (max-width: 1024px) {
+	.sidebar {
+		transform: translateX(-100%);
+		width: var(--sidebar-width) !important; /* На мобилке не сворачиваем, а скрываем */
+	}
+	.sidebar.open {
+		transform: translateX(0);
+	}
+	
+	.sidebar-logo-text, .nav-item-text, .nav-section-title, .sidebar-user-info {
+		display: block !important;
+		opacity: 1 !important;
+	}
+	
+	.nav-item {
+		justify-content: flex-start !important;
+		padding: 0.625rem 1rem !important;
+		border-radius: var(--radius-md) !important;
+		width: 100% !important;
+		margin: 0 0 0.25rem !important;
+	}
+	
+	.nav-item-icon {
+		margin-right: 12px !important;
+	}
+
+	.main-content {
+		margin-left: 0 !important;
+	}
+
+	/* Для мобилки всегда показываем бургер */
+	.burger-btn {
+		display: block;
+	}
+
+	/* Прячем кнопку Collapse на мобилке, так как там бургер */
+	#collapseBtn {
+		display: none;
+	}
+}
+
+@media (max-width: 576px) {
+	.content-wrapper { padding: 1rem; }
+	.topbar { padding: 0 1rem; }
+	.topbar-title p { display: none; }
+}

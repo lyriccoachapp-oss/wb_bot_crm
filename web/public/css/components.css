@@ -1,0 +1,593 @@
+/* ==========================================================================
+   WorkBangers CRM — Компоненты
+   ========================================================================== */
+
+/* -------------------------------------------------------
+   1. Карточки (Cards)
+------------------------------------------------------- */
+.card {
+	background-color: var(--bg-card);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-sm);
+	padding: 1.5rem;
+	margin-bottom: 1.5rem;
+	transition: box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+	box-shadow: var(--shadow-md);
+}
+
+.card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1.25rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h2 {
+	margin: 0;
+	font-size: 1.125rem;
+	color: var(--text-main);
+	font-weight: 600;
+}
+
+/* -------------------------------------------------------
+   2. Таблицы (Tables)
+------------------------------------------------------- */
+.table-container {
+	width: 100%;
+	overflow-x: auto;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	white-space: nowrap;
+}
+
+th {
+	text-align: left;
+	padding: 0.75rem 1rem;
+	font-weight: 600;
+	color: var(--text-muted);
+	font-size: 0.8125rem;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	border-bottom: 1px solid var(--border-color);
+	background-color: var(--bg-body);
+}
+
+/* Иконки сортировки в заголовках */
+.sortable-col {
+	cursor: pointer;
+	user-select: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.sortable-col:hover {
+	color: var(--text-main);
+}
+
+.sort-icon {
+	width: 14px;
+	height: 14px;
+	stroke: currentColor;
+	stroke-width: 2;
+	fill: none;
+	opacity: 0.5;
+}
+
+.sortable-col:hover .sort-icon {
+	opacity: 1;
+}
+
+td {
+	padding: 1rem;
+	color: var(--text-main);
+	border-bottom: 1px solid var(--border-color);
+	vertical-align: middle;
+	font-size: 0.9375rem;
+}
+
+tbody tr {
+	transition: background-color 0.2s;
+}
+
+tbody tr:hover {
+	background-color: var(--bg-body);
+}
+
+tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.clickable {
+	cursor: pointer;
+}
+
+.cell-name {
+	font-weight: 600;
+	color: var(--text-main);
+	display: block;
+}
+
+.cell-sub {
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.cell-amount {
+	font-weight: 600;
+	font-family: monospace;
+	font-size: 1rem;
+}
+
+/* -------------------------------------------------------
+   3. Кнопки (Buttons)
+------------------------------------------------------- */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	border-radius: var(--radius-md);
+	font-weight: 500;
+	font-size: 0.9375rem;
+	cursor: pointer;
+	border: 1px solid transparent;
+	transition: all 0.2s ease;
+	font-family: var(--font-family);
+	box-sizing: border-box;
+	text-decoration: none;
+	line-height: 1.5;
+}
+
+.btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+.btn-lg { padding: 0.75rem 1.5rem; font-size: 1rem; }
+
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-primary:hover { background-color: var(--primary-hover); color: white; }
+
+.btn-secondary { background-color: var(--bg-hover); color: var(--text-main); border-color: var(--border-color); }
+.btn-secondary:hover { background-color: var(--border-color); }
+
+.btn-success { background-color: var(--success-color); color: white; }
+.btn-success:hover { background-color: #047857; }
+
+.btn-danger { background-color: var(--danger-color); color: white; }
+.btn-danger:hover { background-color: #b91c1c; }
+
+/* -------------------------------------------------------
+   4. Бейджи (Badges)
+------------------------------------------------------- */
+.badge {
+	display: inline-block;
+	padding: 0.25rem 0.6rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 4px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.badge--primary { background-color: var(--primary-light); color: var(--primary-color); }
+.badge--success { background-color: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+.badge--warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning-color); }
+.badge--danger { background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+.badge--secondary { background-color: rgba(100, 116, 139, 0.1); color: var(--text-muted); }
+
+.permission-badge {
+	display: inline-block;
+	background-color: var(--bg-body);
+	border: 1px solid var(--border-color);
+	color: var(--text-muted);
+	padding: 0.2rem 0.5rem;
+	border-radius: var(--radius-sm);
+	font-size: 0.75rem;
+	margin: 0.1rem;
+}
+
+/* -------------------------------------------------------
+   5. Формы и Инпуты (Forms)
+------------------------------------------------------- */
+.form-group { margin-bottom: 1rem; }
+.form-group label {
+	display: block;
+	margin-bottom: 0.5rem;
+	font-weight: 500;
+	color: var(--text-main);
+	font-size: 0.875rem;
+}
+
+.form-control, .input-field, .filter-input {
+	width: 100%;
+	padding: 0.625rem 1rem;
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	background-color: var(--bg-body);
+	color: var(--text-main);
+	font-family: var(--font-family);
+	font-size: 0.9375rem;
+	transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control-sm {
+	padding: 0.25rem 0.5rem;
+	font-size: 0.8125rem;
+	height: auto;
+	width: auto;
+}
+
+.form-control:focus, .input-field:focus, .filter-input:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.form-control::placeholder, .input-field::placeholder { color: var(--text-muted); opacity: 0.6; }
+
+.row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 768px) { .row-grid { grid-template-columns: 1fr; } }
+
+.filter-bar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+.filter-group { flex: 1; min-width: 200px; }
+.filter-group label { display: block; margin-bottom: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); }
+
+/* -------------------------------------------------------
+   6. Модальные окна (Modals)
+------------------------------------------------------- */
+.modal {
+	display: none;
+	position: fixed;
+	top: var(--topbar-height);
+	left: var(--sidebar-width);
+	width: calc(100% - var(--sidebar-width));
+	height: calc(100vh - var(--topbar-height));
+	background-color: rgba(0, 0, 0, 0.6);
+	z-index: 800;
+	align-items: center;
+	justify-content: center;
+	backdrop-filter: blur(2px);
+	transition: left 0.3s ease, width 0.3s ease;
+}
+
+html[data-sidebar="collapsed"] .modal {
+	left: var(--sidebar-collapsed-width);
+	width: calc(100% - var(--sidebar-collapsed-width));
+}
+
+@media (max-width: 1024px) {
+	.modal {
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100vh;
+		z-index: 10000;
+	}
+}
+
+.modal.active { display: flex; animation: modalFadeIn 0.2s ease-out; }
+@keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+.modal-content {
+	background-color: var(--bg-card);
+	border-radius: var(--radius-md);
+	width: 100%;
+	max-width: 600px;
+	padding: 2rem;
+	box-shadow: var(--shadow-card);
+	max-height: 90vh;
+	overflow-y: auto;
+	border: 1px solid var(--border-color);
+}
+
+.modal-content h2 {
+	margin-top: 0; margin-bottom: 1.5rem;
+	font-size: 1.25rem; color: var(--text-main);
+	border-bottom: 1px solid var(--border-color);
+	padding-bottom: 1rem;
+}
+
+.modal-footer {
+	margin-top: 2rem; padding-top: 1rem;
+	border-top: 1px solid var(--border-color);
+	display: flex; justify-content: flex-end; gap: 1rem;
+}
+
+/* -------------------------------------------------------
+   7. Пагинация (Pagination)
+------------------------------------------------------- */
+.pagination-wrapper {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin-top: 1.5rem;
+}
+
+.pagination-controls {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.pagination { display: flex; gap: 0.25rem; justify-content: center; }
+.pagination a {
+	display: flex; align-items: center; justify-content: center;
+	width: 36px; height: 36px;
+	border-radius: var(--radius-md);
+	background-color: var(--bg-card);
+	color: var(--text-main);
+	border: 1px solid var(--border-color);
+	font-weight: 500; font-size: 0.875rem;
+}
+.pagination a:hover { background-color: var(--bg-hover); color: var(--primary-color); }
+.pagination a.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+.pagination span.ellipsis {
+	display: flex; align-items: center; justify-content: center;
+	width: 36px; height: 36px;
+	color: var(--text-muted);
+	font-weight: 500; font-size: 0.875rem;
+}
+
+/* -------------------------------------------------------
+   8. Страницы Авторизации (Auth Pages - Style Jina AI)
+------------------------------------------------------- */
+.auth-page {
+	min-height: 100vh;
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem 1rem;
+	/* Убрали жесткие цвета фона, чтобы он наследовал от body / admin panel */
+}
+
+.auth-card {
+	backdrop-filter: blur(10px) saturate(181%);
+	-webkit-backdrop-filter: blur(10px) saturate(181%);
+	background-color: rgba(0, 0, 0, 0.4);
+	border-radius: 8px; /* Уменьшили с 12px */
+	box-shadow: 0 .7rem 1.4rem rgba(0, 0, 0, 0.25), 0 .7rem .7rem rgba(0, 0, 0, 0.22);
+	width: 100%;
+	max-width: 420px;
+	padding: 3rem 2.5rem;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	z-index: 10;
+	color: #ffffff;
+}
+
+@media (max-width: 576px) {
+	.auth-page {
+		padding: 1rem;
+	}
+	.auth-card {
+		padding: 2rem 1.5rem;
+	}
+}
+
+.auth-logo {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 2rem;
+}
+
+.auth-logo-icon {
+	width: 32px; height: 32px;
+	background: var(--primary-color);
+	border-radius: 4px;
+	display: flex; align-items: center; justify-content: center;
+}
+
+.auth-logo-icon svg {
+	width: 20px; height: 20px; fill: white;
+}
+
+.auth-logo h1 {
+	color: #ffffff;
+	font-size: 1.5rem;
+	font-weight: 600;
+	margin: 0;
+}
+
+.auth-subtitle {
+	font-size: 0.9rem;
+	color: #a0a0a0;
+	margin-bottom: 2rem;
+	line-height: 1.5;
+}
+
+.auth-card .input-group label {
+	color: #d0d0d0;
+	font-weight: 500;
+}
+
+.auth-card .input-field {
+	background-color: rgba(42, 42, 42, 0.6);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: #fff;
+	padding: 0.75rem 1rem;
+	border-radius: 4px; /* Уменьшили */
+}
+
+.auth-card .input-field:focus {
+	border-color: #fff;
+	box-shadow: none;
+}
+
+.auth-card .input-field::placeholder { color: #666; }
+
+.auth-card .btn-auth {
+	width: 100%;
+	padding: 0.85rem;
+	border: none;
+	border-radius: 4px; /* Уменьшили */
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.2s;
+	display: flex; justify-content: center; align-items: center;
+}
+
+.auth-card .btn-auth:hover { opacity: 0.9; }
+
+.auth-link { color: #a0a0a0; text-decoration: none; font-size: 0.85rem; }
+.auth-link:hover { color: #ffffff; text-decoration: underline; }
+
+.auth-footer-text {
+	margin-top: 1.5rem;
+	font-size: 0.8rem;
+	color: #777;
+	text-align: center;
+	line-height: 1.5;
+}
+
+.auth-footer-text a { color: #aaa; text-decoration: underline; }
+
+/* -------------------------------------------------------
+   8.1 Floating Labels (form-floating)
+------------------------------------------------------- */
+.form-floating {
+	position: relative;
+	margin-bottom: 1rem;
+}
+
+.form-floating > .form-control {
+	height: 3.5rem;
+	padding: 1rem 0.75rem;
+	background-color: rgba(42, 42, 42, 0.6);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: #fff;
+	border-radius: 4px;
+}
+
+.form-floating > .form-control:focus,
+.form-floating > .form-control:not(:placeholder-shown) {
+	padding-top: 1.625rem;
+	padding-bottom: 0.625rem;
+}
+
+.form-floating > .form-control:focus {
+	background-color: rgba(42, 42, 42, 0.8);
+	border-color: rgba(255, 255, 255, 0.3);
+}
+
+.form-floating > label {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	padding: 1rem 0.75rem;
+	pointer-events: none;
+	border: 1px solid transparent;
+	transform-origin: 0 0;
+	transition: opacity .15s ease-in-out, transform .15s ease-in-out;
+	color: #a0a0a0;
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+	opacity: 0.65;
+	transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+.form-floating > .form-control::placeholder {
+	color: transparent;
+}
+.form-floating > .form-control:focus::placeholder {
+	color: transparent;
+}
+
+/* -------------------------------------------------------
+   8.2 Form Select (for floating labels)
+------------------------------------------------------- */
+.form-select {
+	display: block;
+	width: 100%;
+	padding: 0.625rem 2.25rem 0.625rem 1rem;
+	font-family: var(--font-family);
+	font-size: 0.9375rem;
+	font-weight: 400;
+	color: var(--text-main);
+	background-color: var(--bg-body);
+	background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.75rem center;
+	background-size: 16px 12px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	transition: border-color 0.2s, box-shadow 0.2s;
+	appearance: none;
+	-webkit-appearance: none;
+}
+html[data-theme="dark"] .form-select {
+	background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ccc%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+}
+.form-select:focus {
+	border-color: var(--primary-color);
+	outline: 0;
+	box-shadow: 0 0 0 3px var(--primary-light);
+}
+.form-floating > .form-select {
+	height: 3.5rem;
+	padding-top: 1.625rem;
+	padding-bottom: 0.625rem;
+	background-color: rgba(42, 42, 42, 0.6);
+	color: #fff;
+}
+.form-floating > .form-select:focus {
+	background-color: rgba(42, 42, 42, 0.8);
+}
+.form-floating > .form-select ~ label {
+	opacity: 0.65;
+	transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+/* -------------------------------------------------------
+   9. Оповещения (Alerts)
+------------------------------------------------------- */
+.alert { padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.875rem; font-weight: 500; }
+.alert.error { background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color); border: 1px solid rgba(239, 68, 68, 0.2); }
+.alert.success { background-color: rgba(16, 185, 129, 0.1); color: var(--success-color); border: 1px solid rgba(16, 185, 129, 0.2); }
+
+/* -------------------------------------------------------
+   10. Dashboard специфичные (Stat Cards)
+------------------------------------------------------- */
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+.stat-card { background-color: var(--bg-card); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm); }
+.stat-card h3 { font-size: 0.875rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 2rem; font-weight: 700; color: var(--text-main); }
+.summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.summary-card { background-color: var(--bg-card); padding: 1.5rem; border-radius: var(--radius-md); text-align: center; box-shadow: var(--shadow-sm); }
+.summary-title { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600; }
+.summary-value { font-size: 1.75rem; font-weight: 700; }
+@media (max-width: 768px) { .summary-grid { grid-template-columns: 1fr; } }
+.perm-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; background-color: var(--bg-body); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
+.perm-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-main); cursor: pointer; }
+.perm-checkbox { accent-color: var(--primary-color); width: 16px; height: 16px; }
+
+@media (max-width: 768px) {
+	.pagination-wrapper {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
+	}
+	.pagination {
+		width: 100%;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+}

@@ -1,0 +1,41 @@
+# Laravel (API)
+/api/vendor/
+/api/.env
+/api/.env.backup
+/api/.env.production
+/api/storage/*.key
+/api/storage/gapi/
+/api/storage/framework/cache/data/*
+/api/storage/framework/sessions/*
+/api/storage/framework/testing/*
+/api/storage/framework/views/*
+/api/storage/logs/*
+/api/public/storage
+/api/public/build
+/api/public/hot
+/api/.phpunit.cache
+/api/.phpunit.result.cache
+
+# Bot
+/bot/error.log
+
+# Общие правила
+.env
+node_modules/
+npm-debug.log
+yarn-error.log
+*.log
+*.tmp
+.DS_Store
+
+# Тестовые и временные файлы в корне
+/old/
+/tmp/
+/test_api_output.json
+
+# IDE
+.idea/
+.vscode/
+.fleet/
+.nova/
+.zed/

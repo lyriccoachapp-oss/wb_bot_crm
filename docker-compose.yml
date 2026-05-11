@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: crm_api
+    ports:
+      - "127.0.0.1:8072:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./api:/var/www/html
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: crm_bot
+    ports:
+      - "127.0.0.1:8071:80"
+    volumes:
+      - ./bot:/var/www/html
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: crm_web
+    ports:
+      - "127.0.0.1:8073:80"
+    volumes:
+      - ./web:/var/www/html
+    restart: unless-stopped
+
+  ocr:
+    build:
+      context: ./ocr
+      dockerfile: dockerfile
+    container_name: crm_ocr
+    ports:
+      - "127.0.0.1:8074:8868"
+    environment:
+      - OMP_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - FLAGS_allocator_strategy=naive_best_fit
+    volumes:
+      - ./ocr:/app
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: crm_worker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./api:/var/www/html
+    entrypoint: ["php", "artisan", "queue:work", "--queue=default", "--sleep=3", "--tries=3"]
+    restart: unless-stopped

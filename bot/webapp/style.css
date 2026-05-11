@@ -1,0 +1,222 @@
+/* webapp/style.css */
+/* Базовые переменные и темы */
+:root{
+	--radius: .2rem;                /* ~3px */
+	--pad: 1rem;
+	--gap: .75rem;
+	--btn-pad-y: .95rem;
+	--btn-pad-x: 1.2rem;
+	--font-lg: 1.125rem;
+
+	/* Цвета (светлая тема) */
+	--bg: #fff;
+	--fg: #000;
+	--muted-fg: #555;
+	--surface: #f9f9f9;
+	--surface-2: #f0f0f0;
+	--border: #ccc;
+	--primary: #0b66ff;
+	--primary-fg: #fff;
+	--secondary: #666;
+	--danger: #cc3333;
+
+	/* Анимации */
+	--shadow: 0 2px 16px rgba(0,0,0,.12);
+	--easing: cubic-bezier(.22,.61,.36,1);
+}
+
+/* Авто-тёмная тема (можно убрать, если не нужна) */
+@media (prefers-color-scheme: dark){
+	:root{
+		--bg: #0f1115;
+		--fg: #e7e7e7;
+		--muted-fg: #a0a0a0;
+		--surface: #181b22;
+		--surface-2: #1f2430;
+		--border: #2c3240;
+		--primary: #3b82f6;
+		--primary-fg: #fff;
+		--secondary: #888;
+		--danger: #e34d4d;
+		--shadow: 0 6px 24px rgba(0,0,0,.35);
+	}
+}
+
+/* Нормализация и базовые типографика/фон */
+*{ box-sizing: border-box }
+html,body{ height:100% }
+body{
+	font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+	padding: 1rem;
+	background: var(--bg);
+	color: var(--fg);
+	line-height: 1.5;
+}
+h1,h2,h3{ margin: 0 0 .75rem 0; line-height: 1.25 }
+h1{ font-size: 2rem }
+h2{ font-size: 1.75rem }
+h3{ font-size: 1.25rem }
+p{ margin: 0 0 .75rem 0 }
+
+/* Контейнеры и сетка */
+.container{ width:min(1100px, 94vw); margin:0 auto }
+.grid{ display:grid; gap: var(--gap) }
+.grid-2{ grid-template-columns: repeat(2,minmax(0,1fr)) }
+@media (max-width: 760px){
+	.grid-2{ grid-template-columns: 1fr }
+}
+
+/* Карточки / блоки */
+.card,
+.entry,
+.add-block{
+	border: 1px solid var(--border);
+	padding: var(--pad);
+	margin-bottom: 1rem;
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+.card{ box-shadow: var(--shadow) }
+
+/* Состояния и анимации */
+.entry[data-closed="0"]{ animation: pulse 2s infinite }
+@keyframes pulse{
+	0%{ background:#fff8e1 }
+	50%{ background:#ffecb3 }
+	100%{ background:#fff8e1 }
+}
+@media (prefers-reduced-motion: reduce){
+	.entry[data-closed="0"]{ animation: none }
+}
+
+/* Блок добавления (кликабельная карточка) */
+.add-block{
+	text-align: center;
+	font-size: 2rem;
+	background: var(--surface-2);
+	cursor: pointer;
+	user-select: none;
+}
+.add-block.disabled{ opacity:.4; pointer-events:none }
+
+/* Кнопки */
+.btn{
+	display:inline-flex; align-items:center; justify-content:center;
+	gap:.5rem;
+	padding: var(--btn-pad-y) var(--btn-pad-x);
+	border: none;
+	border-radius: var(--radius);
+	cursor: pointer;
+	background: var(--primary);
+	color: var(--primary-fg);
+	font-size: var(--font-lg);
+	font-weight: 600;
+	transition: transform .08s var(--easing), opacity .2s var(--easing), filter .2s var(--easing);
+}
+.btn:hover{ filter: brightness(1.05) }
+.btn:active{ transform: translateY(1px) }
+.btn:disabled{ opacity:.6; cursor:not-allowed }
+.btn-secondary{ background: var(--secondary); color:#fff }
+.btn-outline{
+	background: transparent;
+	border: 1px solid var(--border);
+	color: var(--fg);
+}
+.btn-danger{ background: var(--danger); color:#fff }
+.btn-sm{ padding:.5rem .75rem; font-size:.95rem }
+
+/* Группы действий внизу форм/модалок */
+.footer-actions{ display:flex; gap:.6rem; margin-top:1rem; flex-wrap:wrap }
+
+/* Поля ввода и формы */
+input[type="text"],
+input[type="number"],
+input[type="search"],
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"],
+textarea,
+select{
+	width:100%;
+	padding:.75rem .85rem;
+	border:1px solid var(--border);
+	border-radius: var(--radius);
+	font-size: 1rem;
+	background: var(--bg);
+	color: var(--fg);
+}
+textarea{ min-height: 28svh }
+label{ display:block; margin-bottom:.35rem }
+.form-row{ margin-bottom: .85rem }
+.helper{ font-size:.9rem; color: var(--muted-fg) }
+
+/* Радио/списки выбора */
+.radio-group{
+	max-height:50vh;
+	overflow:auto;
+	border:1px solid var(--border);
+	padding:.5rem;
+	border-radius: var(--radius);
+	background: var(--bg);
+}
+.radio-group label{ display:block; padding:.4rem 0 }
+
+/* Модальное окно (generic) */
+#modalOverlay{
+	position: fixed; inset: 0;
+	display: none;
+	align-items: center; justify-content: center;
+	background: rgba(0,0,0,.25);  /* слегка затемняем фон для универсальности */
+	z-index: 999;
+	padding: 1rem;
+}
+#modalContent{
+	background: var(--bg);
+	width: min(92vw, 560px);
+	padding: 1rem;
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	max-height: 85vh;
+	overflow: auto;
+	border: 1px solid var(--border);
+}
+@supports (height:100svh){
+	#modalOverlay{ padding: 2svh 1rem }
+	#modalContent{ max-height: 85svh }
+}
+@supports (height:100dvh){
+	#modalOverlay{ padding: 2dvh 1rem }
+	#modalContent{ max-height: 85dvh }
+}
+
+/* Индикаторы/лоадеры */
+.spinner{
+	display:inline-block;
+	width:1em; height:1em;
+	border:.18em solid #d0d0d0;
+	border-top-color: var(--primary);
+	border-radius:50%;
+	animation: spin 1s linear infinite;
+	vertical-align: middle;
+	margin-right:.5rem;
+}
+@keyframes spin{ to{ transform: rotate(360deg) } }
+
+/* Утилиты */
+.muted{ opacity:.75 }
+.hidden{ display:none !important }
+.text-center{ text-align:center }
+.flex{ display:flex }
+.items-center{ align-items:center }
+.justify-between{ justify-content:space-between }
+.gap-sm{ gap:.5rem }
+.gap{ gap: var(--gap) }
+.mt-1{ margin-top:.5rem }
+.mt-2{ margin-top:1rem }
+.mb-1{ margin-bottom:.5rem }
+.mb-2{ margin-bottom:1rem }
+.round{ border-radius: var(--radius) }
+
+/* Ссылки */
+a{ color: var(--primary); text-decoration:none }
+a:hover{ text-decoration:underline }
