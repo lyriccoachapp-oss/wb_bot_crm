@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.13';
+$APP_VERSION = '1.0.26';
 $showlogdata = false;
 
 // Подключаем i18n
@@ -105,7 +105,7 @@ function translate($key) {
 <body>
 	<div class="app-version">v<?= $APP_VERSION ?></div>
 
-	<h2 style="text-transform: uppercase; font-size: 1.25rem; font-weight: bold; margin-bottom: 0.2rem; color: #1e3a8a;">ИСТОРИЯ СМЕН</h2>
+	<h2 style="text-transform: uppercase; font-size: 1.25rem; font-weight: bold; margin-bottom: 0.2rem; color: #1e3a8a;"><?= translate('history_title') ?></h2>
 
 	<div id="content">
 		<div class="spinner-container"><div class="spinner"></div></div>
@@ -172,6 +172,8 @@ function translate($key) {
 		function formatPeriodName(periodObj) {
 			const months = userLanguage === 'ru' ? 
 				['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'] :
+				userLanguage === 'uk' ?
+				['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'] :
 				['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 			
 			const d1 = periodObj.from.getDate();
@@ -188,7 +190,7 @@ function translate($key) {
 
 		function renderTable(entries, periodName) {
 			if (!entries || entries.length === 0) {
-				return `<div class="empty-message">Нет смен за период<br><b>${periodName}</b></div>`;
+				return `<div class="empty-message"><?= translate('no_data') ?><br><b>${periodName}</b></div>`;
 			}
 
 			let rowsHtml = '';
@@ -222,7 +224,7 @@ function translate($key) {
 				} else if (closed) {
 					badgeStr = '0m';
 				} else {
-					badgeStr = 'Открыта';
+					badgeStr = '<?= translate("status_active") ?: "Active" ?>';
 				}
 
 				rowsHtml += `
@@ -243,7 +245,7 @@ function translate($key) {
 				totalHtml = `
 					<tfoot>
 						<tr>
-							<th colspan="4" style="text-align: right;">Итого:</th>
+							<th colspan="4" style="text-align: right;"><?= translate('total') ?></th>
 							<th class="col-hours">${th > 0 ? th + 'h ' : ''}${tm}m</th>
 						</tr>
 					</tfoot>
@@ -254,11 +256,11 @@ function translate($key) {
 				<table class="history-table">
 					<thead>
 						<tr>
-							<th class="col-date">Дата</th>
-							<th class="col-place">Объект</th>
-							<th class="col-start">Начало</th>
-							<th class="col-end">Оконч.</th>
-							<th class="col-hours">Часы</th>
+							<th class="col-date"><?= translate('col_date') ?></th>
+							<th class="col-place"><?= translate('col_place') ?></th>
+							<th class="col-start"><?= translate('col_start') ?></th>
+							<th class="col-end"><?= translate('col_end') ?></th>
+							<th class="col-hours"><?= translate('col_hours') ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -271,8 +273,6 @@ function translate($key) {
 
 		async function initApp() {
 			try {
-				window.Telegram?.WebApp?.ready();
-				window.Telegram?.WebApp?.expand();
 
 				const periods = getHalfMonthPeriods();
 				const pFrom = formatDateString(periods.prev.from);
@@ -312,16 +312,16 @@ function translate($key) {
 
 				const content = document.getElementById('content');
 				content.innerHTML = `
-					<div class="period-title">Тек. период: ${formatPeriodName(periods.current)}</div>
+					<div class="period-title"><?= translate('period_curr') ?>: ${formatPeriodName(periods.current)}</div>
 					${renderTable(currentEntries, formatPeriodName(periods.current))}
 					
-					<div class="period-title" style="margin-top: 2rem;">Пред. период: ${formatPeriodName(periods.prev)}</div>
+					<div class="period-title" style="margin-top: 2rem;"><?= translate('period_prev') ?>: ${formatPeriodName(periods.prev)}</div>
 					${renderTable(prevEntries, formatPeriodName(periods.prev))}
 				`;
 
 			} catch (err) {
-				console.error(err);
-				document.getElementById('content').innerHTML = `<div class="empty-message" style="color:red">Ошибка загрузки данных: ${escapeHtml(err.message)}</div>`;
+				console.error('Error loading history:', err);
+				document.getElementById('content').innerHTML = `<div class="empty-message" style="color:red;"><?= translate('error_loading') ?: 'Error loading history' ?>: ${err.message}</div>`;
 			}
 		}
 

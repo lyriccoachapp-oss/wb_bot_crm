@@ -5,7 +5,7 @@
  * Запускать один раз: php setup_commands.php
  */
 
-define('TOKEN', '7603079317:AAFfLKwDPO2TKyK553MYAfOXiESXflvJAVk');
+define('TOKEN', '6263408125:AAGcrleG66uQKK_GWfmeoHyIPGbhJQFaJW4');
 
 $languages = [
     ''   => [['command' => 'start', 'description' => 'Start']], // дефолт (fallback)

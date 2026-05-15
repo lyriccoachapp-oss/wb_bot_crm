@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.13';
+$APP_VERSION = '1.0.26';
 
 // Подключаем i18n
 require_once('../lib/i18n.php');
@@ -9,7 +9,7 @@ $userLanguage = isset($_GET['lang']) ? $_GET['lang'] : 'en';
 I18n::load($userLanguage);
 
 function translate($key) {
-	return __('webapp.wt.'.$key);
+	return __('webapp.objects.'.$key) ?: __('webapp.wt.'.$key);
 }
 
 ?>
@@ -66,32 +66,32 @@ function translate($key) {
 <body>
 	<div class="app-version">v<?= htmlspecialchars($APP_VERSION) ?></div>
 	<div class="header">
-		<h2>Управление объектами</h2>
+		<h2><?= translate('title') ?></h2>
 	</div>
 
 	<div class="card">
-		<h3>Добавить новый объект</h3>
+		<h3><?= translate('add_new') ?></h3>
 		
 		<div class="form-group">
-			<label>Поиск адреса</label>
-			<input type="text" id="objSearchAddress" placeholder="Начните вводить адрес..." autocomplete="off">
+			<label><?= ($userLanguage === 'ru' ? 'Поиск адреса' : ($userLanguage === 'uk' ? 'Пошук адреси' : 'Search address')) ?></label>
+			<input type="text" id="objSearchAddress" placeholder="<?= ($userLanguage === 'ru' ? 'Начните вводить адрес...' : 'Start typing address...') ?>" autocomplete="off">
 			<div id="objAutocompleteResults"></div>
 		</div>
 
 		<div class="form-group">
-			<label>Название объекта</label>
+			<label><?= ($userLanguage === 'ru' ? 'Название объекта' : ($userLanguage === 'uk' ? 'Назва об\'єкта' : 'Object Name')) ?></label>
 			<input type="text" id="objAddName">
 		</div>
 
 		<div class="form-group">
-			<label>Адрес (Полный)</label>
+			<label><?= ($userLanguage === 'ru' ? 'Адрес (Полный)' : ($userLanguage === 'uk' ? 'Адреса (Повна)' : 'Address (Full)')) ?></label>
 			<input type="text" id="objAddAddress" readonly>
 		</div>
 
 		<div class="form-group">
-			<label>Тип работ</label>
+			<label><?= ($userLanguage === 'ru' ? 'Тип работ' : ($userLanguage === 'uk' ? 'Тип робіт' : 'Work Type')) ?></label>
 			<select id="objAddWorksType">
-				<option value="" disabled selected>Выберите тип...</option>
+				<option value="" disabled selected><?= ($userLanguage === 'ru' ? 'Выберите тип...' : 'Select type...') ?></option>
 				<option value="Roof">Roof</option>
 				<option value="Siding">Siding</option>
 				<option value="External works">External works</option>
@@ -102,35 +102,35 @@ function translate($key) {
 			</select>
 		</div>
 
-		<button onclick="saveObject()" id="btnSaveObject" class="btn">Добавить объект</button>
+		<button onclick="saveObject()" id="btnSaveObject" class="btn"><?= translate('add_new') ?></button>
 	</div>
 
 	<div class="objects-list">
-		<h3 style="margin-bottom: 1rem; color: #111827; font-size: 1.2rem;">Существующие объекты</h3>
+		<h3 style="margin-bottom: 1rem; color: #111827; font-size: 1.2rem;"><?= ($userLanguage === 'ru' ? 'Существующие объекты' : ($userLanguage === 'uk' ? 'Існуючі об\'єкти' : 'Existing Objects')) ?></h3>
 		<div id="objectsContainer">
-			<div style="text-align: center; color: #6b7280; padding: 2rem;">Загрузка...</div>
+			<div style="text-align: center; color: #6b7280; padding: 2rem;"><?= ($userLanguage === 'ru' ? 'Загрузка...' : 'Loading...') ?></div>
 		</div>
 	</div>
 
 	<!-- Модалка редактирования -->
 	<div class="modal-overlay" id="modalEditObject" style="display:none;position:fixed;top:0;left:0;right:0;bottom:5rem;align-items:center;justify-content:center;background:rgba(255,255,255,.9);z-index:999;padding:1rem;box-sizing:border-box">
 		<div class="modal" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,.15);width:100%;max-width:400px;max-height:100%;overflow-y:auto;">
-			<h3 style="margin-top:0;margin-bottom:1.5rem;font-size:1.2rem;text-align:center;">Редактирование объекта</h3>
+			<h3 style="margin-top:0;margin-bottom:1.5rem;font-size:1.2rem;text-align:center;"><?= translate('edit_title') ?: 'Edit Object' ?></h3>
 			
 			<input type="hidden" id="objEditId">
 			
 			<div class="form-group">
-				<label>Название</label>
+				<label><?= ($userLanguage === 'ru' ? 'Название' : 'Name') ?></label>
 				<input type="text" id="objEditName">
 			</div>
 
 			<div class="form-group">
-				<label>Адрес</label>
+				<label><?= ($userLanguage === 'ru' ? 'Адрес' : 'Address') ?></label>
 				<input type="text" id="objEditAddress">
 			</div>
 
 			<div class="form-group">
-				<label>Тип работ</label>
+				<label><?= ($userLanguage === 'ru' ? 'Тип работ' : 'Work Type') ?></label>
 				<select id="objEditWorksType">
 					<option value="Roof">Roof</option>
 					<option value="Siding">Siding</option>
@@ -143,15 +143,15 @@ function translate($key) {
 			</div>
 
 			<div class="form-group">
-				<label>Статус</label>
+				<label><?= ($userLanguage === 'ru' ? 'Статус' : 'Status') ?></label>
 				<select id="objEditActive">
-					<option value="1">Активен</option>
-					<option value="0">Архив</option>
+					<option value="1"><?= ($userLanguage === 'ru' ? 'Активен' : 'Active') ?></option>
+					<option value="0"><?= ($userLanguage === 'ru' ? 'Архив' : 'Archive') ?></option>
 				</select>
 			</div>
 
-			<button onclick="submitEditObject()" id="btnSubmitEdit" class="btn" style="margin-bottom:0.5rem;">Сохранить</button>
-			<button onclick="closeEditModal()" class="btn" style="background:#6b7280;">Отмена</button>
+			<button onclick="submitEditObject()" id="btnSubmitEdit" class="btn" style="margin-bottom:0.5rem;"><?= translate('btn_save') ?></button>
+			<button onclick="closeEditModal()" class="btn" style="background:#6b7280;"><?= translate('close') ?: 'Cancel' ?></button>
 		</div>
 	</div>
 
@@ -179,7 +179,7 @@ function translate($key) {
 				if (navObj && (profileData.role === 'admin' || (profileData.permissions && profileData.permissions.includes('objects.manage')))) {
 					navObj.style.display = 'flex';
 				} else {
-					document.body.innerHTML = '<div style="text-align:center; padding: 2rem; color: red;">У вас нет прав для просмотра этой страницы</div>';
+					document.body.innerHTML = '<div style="text-align:center; padding: 2rem; color: red;">' + (userLanguage === 'ru' ? 'У вас нет прав' : 'Access denied') + '</div>';
 					return;
 				}
 
@@ -193,14 +193,14 @@ function translate($key) {
 				}
 			} catch (err) {
 				console.error('Error init:', err);
-				window.Telegram.WebApp.showAlert('Ошибка загрузки данных: ' + err.message);
+				window.Telegram.WebApp.showAlert((userLanguage === 'ru' ? 'Ошибка загрузки данных: ' : (userLanguage === 'uk' ? 'Помилка завантаження даних: ' : 'Data load error: ')) + err.message);
 			}
 		}
 
 		function renderObjects(places) {
 			const container = document.getElementById('objectsContainer');
 			if (!places || places.length === 0) {
-				container.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 2rem;">Нет активных объектов</div>';
+				container.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 2rem;">' + (userLanguage === 'ru' ? 'Нет активных объектов' : 'No active objects') + '</div>';
 				return;
 			}
 			container.innerHTML = '';
@@ -223,7 +223,7 @@ function translate($key) {
 					<h4>${escapeHtml(p.name)}</h4>
 					<p>${escapeHtml(p.address)}</p>
 					${p.works_type ? `<span class="object-badge">${escapeHtml(p.works_type)}</span>` : ''}
-					${!p.active ? `<span class="object-badge" style="background:#fee2e2;color:#b91c1c;">Архив</span>` : ''}
+					${!p.active ? `<span class="object-badge" style="background:#fee2e2;color:#b91c1c;">${(userLanguage === 'ru' ? 'Архив' : (userLanguage === 'uk' ? 'Архів' : 'Archive'))}</span>` : ''}
 					${editHtml}
 				`;
 				container.appendChild(div);
@@ -337,21 +337,21 @@ function translate($key) {
 			const worksType = document.getElementById('objAddWorksType').value;
 			
 			if (!name) {
-				window.Telegram.WebApp.showAlert('Введите название объекта');
+				window.Telegram.WebApp.showAlert(userLanguage === 'ru' ? 'Введите название объекта' : (userLanguage === 'uk' ? 'Введіть назву об\'єкта' : 'Enter object name'));
 				return;
 			}
 			if (!address) {
-				window.Telegram.WebApp.showAlert('Выберите полный адрес из подсказок');
+				window.Telegram.WebApp.showAlert(userLanguage === 'ru' ? 'Выберите полный адрес из подсказок' : (userLanguage === 'uk' ? 'Оберіть повну адресу з підказок' : 'Select full address from suggestions'));
 				return;
 			}
 			if (!worksType) {
-				window.Telegram.WebApp.showAlert('Выберите тип работ');
+				window.Telegram.WebApp.showAlert(userLanguage === 'ru' ? 'Выберите тип работ' : (userLanguage === 'uk' ? 'Оберіть тип робіт' : 'Select work type'));
 				return;
 			}
 
 			const btn = document.getElementById('btnSaveObject');
 			btn.disabled = true;
-			btn.textContent = 'Сохранение...';
+			btn.textContent = userLanguage === 'ru' ? 'Сохранение...' : (userLanguage === 'uk' ? 'Збереження...' : 'Saving...');
 
 			try {
 				const res = await WebAppAPI.request('/objects', 'POST', {
@@ -361,21 +361,21 @@ function translate($key) {
 				});
 
 				if (res.success || res.id) {
-					window.Telegram.WebApp.showAlert('Объект успешно добавлен!');
+					window.Telegram.WebApp.showAlert(userLanguage === 'ru' ? 'Объект успешно добавлен!' : (userLanguage === 'uk' ? 'Об\'єкт успішно доданий!' : 'Object added successfully!'));
 					document.getElementById('objSearchAddress').value = '';
 					document.getElementById('objAddName').value = '';
 					document.getElementById('objAddAddress').value = '';
 					document.getElementById('objAddWorksType').value = '';
 					initApp(); // Перезагружаем список
 				} else {
-					window.Telegram.WebApp.showAlert(res.error || 'Ошибка при сохранении');
+					window.Telegram.WebApp.showAlert(res.error || (userLanguage === 'ru' ? 'Ошибка при сохранении' : 'Save error'));
 				}
 			} catch (error) {
 				console.error('Error adding object:', error);
-				window.Telegram.WebApp.showAlert('Сетевая ошибка при добавлении объекта');
+				window.Telegram.WebApp.showAlert(userLanguage === 'ru' ? 'Сетевая ошибка при добавлении объекта' : 'Network error adding object');
 			} finally {
 				btn.disabled = false;
-				btn.textContent = 'Добавить объект';
+				btn.textContent = userLanguage === 'ru' ? 'Добавить объект' : (userLanguage === 'uk' ? 'Додати об\'єкт' : 'Add Object');
 			}
 		}
 
@@ -433,8 +433,6 @@ function translate($key) {
 			}
 		}
 
-		window.Telegram.WebApp.ready();
-		window.Telegram.WebApp.expand();
 		initApp();
 	</script>
 </body>

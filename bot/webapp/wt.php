@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.13';
+$APP_VERSION = '1.0.26';
 $showlogdata = false;
 
 // Подключаем i18n
@@ -130,7 +130,7 @@ $yesterday = date('Y-m-d', strtotime('-1 day'));
 		body { padding-bottom: 5rem; }
 	</style>
 	<script src="https://telegram.org/js/telegram-web-app.js"></script>
-	<script src="auth.js"></script>
+	<script src="auth.js?v=<?= $APP_VERSION ?>"></script>
 </head>
 <body>
 <div class="app-version">v<?= htmlspecialchars($APP_VERSION) ?></div>
@@ -143,7 +143,7 @@ $yesterday = date('Y-m-d', strtotime('-1 day'));
 <div id="entries">
     <!-- Сюда будут загружены смены через JS -->
     <div style="text-align:center; padding: 2rem;" id="loadingIndicator">
-        <div class="spinner"></div> Загрузка...
+        <div class="spinner"></div> <?= ($userLanguage === 'ru' ? 'Загрузка...' : ($userLanguage === 'uk' ? 'Завантаження...' : 'Loading...')) ?>
     </div>
 </div>
 
@@ -215,7 +215,7 @@ async function initApp() {
 
 	} catch (err) {
 		console.error(err);
-		document.getElementById('entries').innerHTML = `<div style="text-align:center;color:red;padding:1rem;">Ошибка загрузки данных: ${err.message}</div>`;
+		document.getElementById('entries').innerHTML = `<div style="text-align:center;color:red;padding:1rem;">` + (userLanguage === 'ru' ? 'Ошибка загрузки данных' : (userLanguage === 'uk' ? 'Помилка завантаження даних' : 'Error loading data')) + `: ${err.message}</div>`;
 	}
 }
 
@@ -649,7 +649,7 @@ longitude: pos.coords.longitude
 					if (addBlock) addBlock.classList.add('disabled');
 				} else {
 					logGeo('Checkin failed: ' + (data ? data.error : 'unknown'));
-					alert(texts.checkin_error + ': ' + (data && data.error ? data.error : 'Неизвестная ошибка'));
+					alert(texts.checkin_error + ': ' + (data && data.error ? data.error : (userLanguage === 'ru' ? 'Неизвестная ошибка' : 'Unknown error')));
 				}
 			})
 			.catch(err => {

@@ -3,7 +3,7 @@
  * Новый чистый Telegram Bot (Webhook Entry Point)
  */
 
-define('TOKEN', '7603079317:AAFfLKwDPO2TKyK553MYAfOXiESXflvJAVk');
+define('TOKEN', '6263408125:AAGcrleG66uQKK_GWfmeoHyIPGbhJQFaJW4');
 define('WEBAPP_URL_WT', 'https://crm.workbangers.com/bot/webapp/wt.php');
 define('WEBAPP_URL_RECEIPTS', 'https://crm.workbangers.com/bot/webapp/wt_receipt.php');
 define('WEBAPP_URL_HISTORY', 'https://crm.workbangers.com/bot/webapp/wt_history.php');
@@ -60,31 +60,23 @@ if (isset($update['message'])) {
 
     if ($text === '/start') {
         // Передаем язык и параметр версии (anti-cache) в WebApp через GET
-        $webAppWt = WEBAPP_URL_WT . '?u_id=' . $chatId . '&lang=' . $lang . '&v=' . time();
-        $webAppReceipts = WEBAPP_URL_RECEIPTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=' . time();
-        $webAppHistory = WEBAPP_URL_HISTORY . '?u_id=' . $chatId . '&lang=' . $lang . '&v=' . time();
-        $webAppObjects = WEBAPP_URL_OBJECTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=' . time();
+        $webAppWt = WEBAPP_URL_WT . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.23';
+        $webAppReceipts = WEBAPP_URL_RECEIPTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.23';
+        $webAppHistory = WEBAPP_URL_HISTORY . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.23';
+        $webAppObjects = WEBAPP_URL_OBJECTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.23';
         
         $role = $resAuth['data']['role'] ?? 'user';
 
-        $btnWt = ['text' => __('menu.worktime'), 'web_app' => ['url' => $webAppWt], 'style' => 'primary'];
-        $btnReceipts = ['text' => __('menu.receipts'), 'web_app' => ['url' => $webAppReceipts], 'style' => 'primary'];
-        $btnHistory = ['text' => __('menu.history'), 'web_app' => ['url' => $webAppHistory]];
-        $btnObjects = ['text' => __('menu.objects'), 'web_app' => ['url' => $webAppObjects]];
+        $btnApp = ['text' => __('menu.open_app'), 'web_app' => ['url' => $webAppWt], 'style' => 'primary'];
         $btnAdmin = ['text' => __('menu.admin_panel'), 'url' => 'https://crm.workbangers.com/'];
         
         $keyboardLayout = [];
 
         if ($role === 'admin') {
-            $keyboardLayout[] = [$btnWt, $btnReceipts];
-            $keyboardLayout[] = [$btnHistory, $btnObjects];
+            $keyboardLayout[] = [$btnApp];
             $keyboardLayout[] = [$btnAdmin];
-        } elseif ($role === 'manager') {
-            $keyboardLayout[] = [$btnWt, $btnReceipts];
-            $keyboardLayout[] = [$btnHistory, $btnObjects];
         } else {
-            $keyboardLayout[] = [$btnWt, $btnReceipts];
-            $keyboardLayout[] = [$btnHistory];
+            $keyboardLayout[] = [$btnApp];
         }
 
         $keyboard = [

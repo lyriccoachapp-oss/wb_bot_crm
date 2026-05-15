@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.13';
+$APP_VERSION = '1.0.26';
 
 // Подключаем i18n
 require_once('../lib/i18n.php');
@@ -14,7 +14,7 @@ I18n::load($userLanguage);
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<title>Чеки</title>
+	<title><?= __('webapp.receipts.title') ?></title>
 	<style>
 		:root{
 			--radius:.4rem;
@@ -91,27 +91,27 @@ I18n::load($userLanguage);
 	<div class="app-version">v<?= $APP_VERSION ?></div>
 
 	<div class="header">
-		<h2 style="text-transform: uppercase; font-size: 1.25rem; font-weight: bold; margin-bottom: 0.2rem; color: #1e3a8a;">ЧЕКИ</h2>
+		<h2 style="text-transform: uppercase; font-size: 1.25rem; font-weight: bold; margin-bottom: 0.2rem; color: #1e3a8a;"><?= __('webapp.receipts.title') ?></h2>
 	</div>
 
-	<div class="tabs">
-		<div class="tab active" onclick="switchTab('upload')">Добавить чеки</div>
-		<div class="tab" onclick="switchTab('list')">Список чеков</div>
+		<div class="tabs">
+		<div class="tab active" onclick="switchTab('upload')"><?= ($userLanguage === 'ru' ? 'Добавить чеки' : ($userLanguage === 'uk' ? 'Додати чеки' : 'Add Receipts')) ?></div>
+		<div class="tab" onclick="switchTab('list')"><?= ($userLanguage === 'ru' ? 'Список чеков' : ($userLanguage === 'uk' ? 'Список чеків' : 'Receipts List')) ?></div>
 	</div>
 
 	<!-- Вкладка Загрузка -->
 	<div id="tab-upload" class="tab-content active">
 		<div class="warning-box">
-			<strong>Внимание!</strong> Загружайте чеки при хорошем интернете (желательно Wi-Fi). При сохранении чеков <b>обязательно убедитесь, что данные верные</b>, поскольку автоматическое распознавание может быть неточным.
+			<?= ($userLanguage === 'ru' ? '<strong>Внимание!</strong> Загружайте чеки при хорошем интернете.' : '<strong>Warning!</strong> Upload receipts with good internet connection.') ?>
 		</div>
 		<div class="instruction-box">
-			<b>Как это работает:</b> Выберите фото чека. Он станет в очередь на распознавание. Дождитесь окончания (статус изменится), нажмите на него, проверьте данные и нажмите "Сохранить".
+			<b><?= ($userLanguage === 'ru' ? 'Как это работает:' : ($userLanguage === 'uk' ? 'Як це працює:' : 'How it works:')) ?></b> <?= ($userLanguage === 'ru' ? 'Выберите фото чека. Он станет в очередь на распознавание. Дождитесь окончания (статус изменится), нажмите на него, проверьте данные и нажмите "Сохранить".' : ($userLanguage === 'uk' ? 'Оберіть фото чека. Він стане в чергу на розпізнавання. Дочекайтеся закінчення (статус зміниться), натисніть на нього, перевірте дані та натисніть "Зберегти".' : 'Select a photo of the receipt. It will be placed in the recognition queue. Wait for completion (status will change), click on it, check the data and click "Save".')) ?>
 		</div>
 
 		<input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileSelect(event)" multiple>
 		<button class="btn" onclick="document.getElementById('fileInput').click()">
 			<svg style="vertical-align:middle;margin-right:8px;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-			Сфотографировать / Загрузить
+			<?= ($userLanguage === 'ru' ? 'Сфотографировать / Загрузить' : ($userLanguage === 'uk' ? 'Сфотографувати / Завантажити' : 'Take Photo / Upload')) ?>
 		</button>
 
 		<div class="queue-list" id="queueList">
@@ -130,71 +130,71 @@ I18n::load($userLanguage);
 	<!-- Модалка проверки чека -->
 	<div id="modalOverlay">
 		<div id="modalContent">
-			<h3 style="margin-top:0;margin-bottom:1.5rem;font-size:1.2rem;">Проверка данных чека</h3>
+			<h3 style="margin-top:0;margin-bottom:1.5rem;font-size:1.2rem;"><?= ($userLanguage === 'ru' ? 'Проверка данных чека' : 'Review Receipt Data') ?></h3>
 			<input type="hidden" id="f_queue_id">
 			
 			<div class="form-group">
-				<label>Объект</label>
+				<label><?= ($userLanguage === 'ru' ? 'Объект' : ($userLanguage === 'uk' ? 'Об\'єкт' : 'Object')) ?></label>
 				<select id="f_place">
-					<option value="">-- Выберите объект --</option>
+					<option value=""><?= ($userLanguage === 'ru' ? '-- Выберите объект --' : ($userLanguage === 'uk' ? '-- Оберіть об\'єкт --' : '-- Select object --')) ?></option>
 				</select>
 			</div>
 			
 			<div class="form-group" style="display:flex;gap:1rem;">
 				<div style="flex:1;">
-					<label>Дата</label>
+					<label><?= ($userLanguage === 'ru' ? 'Дата' : 'Date') ?></label>
 					<input type="date" id="f_date">
 				</div>
 				<div style="flex:1;">
-					<label>Время</label>
+					<label><?= ($userLanguage === 'ru' ? 'Время' : ($userLanguage === 'uk' ? 'Час' : 'Time')) ?></label>
 					<input type="time" id="f_time">
 				</div>
 			</div>
 			
 			<div class="form-group" style="display:flex;gap:0.5rem;">
 				<div style="flex:1;">
-					<label>Без налогов</label>
+					<label><?= ($userLanguage === 'ru' ? 'Без налогов' : ($userLanguage === 'uk' ? 'Без податків' : 'Subtotal')) ?></label>
 					<input type="number" step="0.01" id="f_subtotal">
 				</div>
 				<div style="flex:1;">
-					<label>Налоги</label>
+					<label><?= ($userLanguage === 'ru' ? 'Налоги' : ($userLanguage === 'uk' ? 'Податки' : 'Tax')) ?></label>
 					<input type="number" step="0.01" id="f_tax">
 				</div>
 				<div style="flex:1;">
-					<label>Итого</label>
+					<label><?= ($userLanguage === 'ru' ? 'Итого' : ($userLanguage === 'uk' ? 'Всього' : 'Total')) ?></label>
 					<input type="number" step="0.01" id="f_amount">
 				</div>
 			</div>
 			
 			<div class="form-group" style="display:flex;gap:1rem;">
 				<div style="flex:1;">
-					<label>Тип оплаты</label>
+					<label><?= ($userLanguage === 'ru' ? 'Тип оплаты' : ($userLanguage === 'uk' ? 'Тип оплати' : 'Payment Type')) ?></label>
 					<select id="f_payment_method">
-						<option value="card">Карта</option>
-						<option value="cash">Наличные</option>
+						<option value="card"><?= ($userLanguage === 'ru' ? 'Карта' : 'Card') ?></option>
+						<option value="cash"><?= ($userLanguage === 'ru' ? 'Наличные' : ($userLanguage === 'uk' ? 'Готівка' : 'Cash')) ?></option>
 					</select>
 				</div>
 				<div style="flex:1;">
-					<label>Категория</label>
+					<label><?= ($userLanguage === 'ru' ? 'Категория' : ($userLanguage === 'uk' ? 'Категорія' : 'Category')) ?></label>
 					<select id="f_category">
-						<option value="materials">Материалы (Materials)</option>
-						<option value="fuel">Топливо (Fuel)</option>
-						<option value="tools">Инструменты (Tools)</option>
-						<option value="restaurant">Обед (Restaurant)</option>
-						<option value="groceries">Продукты (Groceries)</option>
-						<option value="other">Другое (Other)</option>
+						<option value="materials"><?= ($userLanguage === 'ru' ? 'Материалы (Materials)' : 'Materials') ?></option>
+						<option value="fuel"><?= ($userLanguage === 'ru' ? 'Топливо (Fuel)' : 'Fuel') ?></option>
+						<option value="tools"><?= ($userLanguage === 'ru' ? 'Инструменты (Tools)' : 'Tools') ?></option>
+						<option value="restaurant"><?= ($userLanguage === 'ru' ? 'Обед (Restaurant)' : 'Restaurant') ?></option>
+						<option value="groceries"><?= ($userLanguage === 'ru' ? 'Продукты (Groceries)' : 'Groceries') ?></option>
+						<option value="other"><?= ($userLanguage === 'ru' ? 'Другое (Other)' : 'Other') ?></option>
 					</select>
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label>Комментарий</label>
+				<label><?= ($userLanguage === 'ru' ? 'Комментарий' : ($userLanguage === 'uk' ? 'Коментар' : 'Comment')) ?></label>
 				<textarea id="f_comment" rows="2"></textarea>
 			</div>
 
 			<div class="modal-buttons">
-				<button class="btn btn-outline" onclick="closeModal()">Отмена</button>
-				<button class="btn" id="btnSaveReceipt" onclick="saveReceipt()">Сохранить</button>
+				<button class="btn btn-outline" onclick="closeModal()"><?= ($userLanguage === 'ru' ? 'Отмена' : 'Cancel') ?></button>
+				<button class="btn" id="btnSaveReceipt" onclick="saveReceipt()"><?= ($userLanguage === 'ru' ? 'Сохранить' : 'Save') ?></button>
 			</div>
 		</div>
 	</div>
@@ -204,28 +204,28 @@ I18n::load($userLanguage);
 
 	<div class="modal-overlay" id="modalObjectAdd" style="display:none;position:fixed;top:0;left:0;right:0;bottom:5rem;align-items:center;justify-content:center;background:rgba(255,255,255,.9);z-index:999;padding:1rem;box-sizing:border-box">
     <div class="modal" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,.15);width:100%;max-width:400px;max-height:100%;overflow-y:auto;">
-        <h3 style="margin-top:0;margin-bottom:1.5rem;font-size:1.2rem;text-align:center;">Добавление объекта</h3>
+        <h3 style="margin-top:0;margin-bottom:1.5rem;font-size:1.2rem;text-align:center;"><?= ($userLanguage === 'ru' ? 'Добавление объекта' : ($userLanguage === 'uk' ? 'Додавання об\'єкта' : 'Add Object')) ?></h3>
         
         <div style="margin-bottom:1rem;position:relative;">
-            <label style="display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#4b5563;">Поиск адреса</label>
-            <input type="text" id="objSearchAddress" placeholder="Начните вводить адрес..." autocomplete="off" style="width:100%;padding:0.75rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem;box-sizing:border-box;">
+            <label style="display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#4b5563;"><?= ($userLanguage === 'ru' ? 'Поиск адреса' : ($userLanguage === 'uk' ? 'Пошук адреси' : 'Search address')) ?></label>
+            <input type="text" id="objSearchAddress" placeholder="<?= ($userLanguage === 'ru' ? 'Начните вводить адрес...' : 'Start typing address...') ?>" autocomplete="off" style="width:100%;padding:0.75rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem;box-sizing:border-box;">
             <div id="objAutocompleteResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d1d5db;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:1001;box-shadow:0 4px 6px rgba(0,0,0,0.1);"></div>
         </div>
 
         <div style="margin-bottom:1rem;">
-            <label style="display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#4b5563;">Название объекта</label>
+            <label style="display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#4b5563;"><?= ($userLanguage === 'ru' ? 'Название объекта' : ($userLanguage === 'uk' ? 'Назва об\'єкта' : 'Object Name')) ?></label>
             <input type="text" id="objAddName" style="width:100%;padding:0.75rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem;box-sizing:border-box;">
         </div>
 
         <div style="margin-bottom:1rem;">
-            <label style="display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#4b5563;">Адрес (Полный)</label>
+            <label style="display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#4b5563;"><?= ($userLanguage === 'ru' ? 'Адрес (Полный)' : ($userLanguage === 'uk' ? 'Адреса (Повна)' : 'Address (Full)')) ?></label>
             <input type="text" id="objAddAddress" readonly style="width:100%;padding:0.75rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem;box-sizing:border-box;background:#f3f4f6;">
         </div>
 
         <div style="margin-bottom:1.5rem;">
-            <label style="display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#4b5563;">Тип работ</label>
+            <label style="display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#4b5563;"><?= ($userLanguage === 'ru' ? 'Тип работ' : ($userLanguage === 'uk' ? 'Тип робіт' : 'Work Type')) ?></label>
             <select id="objAddWorksType" style="width:100%;padding:0.75rem;border:1px solid #d1d5db;border-radius:8px;font-size:1rem;box-sizing:border-box;background:#fff;">
-                <option value="" disabled selected>Выберите тип...</option>
+                <option value="" disabled selected><?= ($userLanguage === 'ru' ? 'Выберите тип...' : 'Select type...') ?></option>
                 <option value="Roof">Roof</option>
                 <option value="Siding">Siding</option>
                 <option value="External works">External works</option>
@@ -237,13 +237,14 @@ I18n::load($userLanguage);
         </div>
 
         <div style="display:flex;gap:1rem;">
-            <button onclick="closeObjectModal()" style="flex:1;padding:0.75rem;border:none;border-radius:8px;background:#f3f4f6;color:#4b5563;font-size:1rem;font-weight:600;cursor:pointer;">Отмена</button>
-            <button onclick="saveObject()" id="btnSaveObject" style="flex:1;padding:0.75rem;border:none;border-radius:8px;background:#2563eb;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;">Добавить</button>
+            <button onclick="closeObjectModal()" style="flex:1;padding:0.75rem;border:none;border-radius:8px;background:#f3f4f6;color:#4b5563;font-size:1rem;font-weight:600;cursor:pointer;"><?= ($userLanguage === 'ru' ? 'Отмена' : 'Cancel') ?></button>
+            <button onclick="saveObject()" id="btnSaveObject" style="flex:1;padding:0.75rem;border:none;border-radius:8px;background:#2563eb;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;"><?= ($userLanguage === 'ru' ? 'Добавить' : 'Add') ?></button>
         </div>
     </div>
 </div>
 
 <script>
+		const userLanguage = <?= json_encode($userLanguage) ?>;
 		let places = [];
 		let queueItems = [];
 		let pollInterval = null;
@@ -273,8 +274,6 @@ I18n::load($userLanguage);
 
 		async function initApp() {
 			try {
-				window.Telegram?.WebApp?.ready();
-				window.Telegram?.WebApp?.expand();
 
 				const [placesData, profileData] = await Promise.all([
 					WebAppAPI.request('/references/objects?status=1'),
@@ -326,7 +325,7 @@ I18n::load($userLanguage);
 			let html = '';
 			
 			if (items.length === 0) {
-				container.innerHTML = '<div style="text-align:center;color:#888;padding:1rem;">Очередь пуста</div>';
+				container.innerHTML = '<div style="text-align:center;color:#888;padding:1rem;">' + (userLanguage === 'ru' ? 'Очередь пуста' : 'Queue is empty') + '</div>';
 				return;
 			}
 
@@ -336,13 +335,13 @@ I18n::load($userLanguage);
 				
 				let statusHtml = '';
 				if (isPending) {
-					statusHtml = `<div class="spinner-small"></div> В очереди на распознавание`;
+					statusHtml = `<div class="spinner-small"></div> ` + (userLanguage === 'ru' ? 'В очереди на распознавание' : 'Processing...');
 				} else if (isError) {
-					statusHtml = `<span style="color:#ef4444">Ошибка распознавания</span>`;
+					statusHtml = `<span style="color:#ef4444">` + (userLanguage === 'ru' ? 'Ошибка распознавания' : 'OCR Error') + `</span>`;
 				} else {
 					statusHtml = `<span class="q-status ready">
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
-						Требует проверки
+						` + (userLanguage === 'ru' ? 'Требует проверки' : 'Needs Review') + `
 					</span>`;
 				}
 
@@ -415,44 +414,69 @@ I18n::load($userLanguage);
 			const files = event.target.files;
 			if (!files || files.length === 0) return;
 
-			// Читаем и жмем файлы сразу же, чтобы iOS не удалил их
 			const filesArray = Array.from(files);
-			
-			// Запускаем сжатие всех файлов параллельно, чтобы заблокировать их в памяти до очистки input
+			const container = document.getElementById('queueList');
+			const emptyText = (userLanguage === 'ru' ? 'Очередь пуста' : (userLanguage === 'uk' ? 'Черга порожня' : 'Queue is empty'));
+			if (container.innerHTML.includes(emptyText)) container.innerHTML = '';
+            
+			// 1. Сразу рисуем карточки статуса для всех файлов до начала сжатия
+			const fileCards = [];
+			for (let i = 0; i < filesArray.length; i++) {
+				const file = filesArray[i];
+				const tempId = 'temp_prep_' + Date.now() + '_' + i;
+				const statusText = userLanguage === 'ru' ? 'Сжатие фото...' : (userLanguage === 'uk' ? 'Стиснення фото...' : 'Compressing...');
+				const tempHtml = `
+					<div class="q-card blurred" id="${tempId}">
+						<img src="${URL.createObjectURL(file)}" class="q-thumb">
+						<div class="q-info">
+							<div class="q-title">${escapeHtml(file.name)}</div>
+							<div class="q-status" id="status_${tempId}"><div class="spinner-small"></div> ${statusText}</div>
+						</div>
+					</div>
+				`;
+				container.insertAdjacentHTML('afterbegin', tempHtml);
+				fileCards.push({ originalName: file.name, tempId });
+			}
+
+			// 2. Запускаем сжатие всех файлов параллельно, чтобы заблокировать их в памяти до очистки input
 			const filesData = await Promise.all(filesArray.map(f => compressImage(f, 1600)));
 			
 			// Теперь можно безопасно очистить input
 			event.target.value = '';
 
+			// 3. Загружаем на сервер
 			for (let i = 0; i < filesData.length; i++) {
 				const file = filesData[i];
+				const cardMeta = fileCards[i];
+				const tempId = cardMeta.tempId;
+
+				const statusEl = document.getElementById('status_' + tempId);
+				if (statusEl) {
+					const loadingText = userLanguage === 'ru' ? 'Загрузка...' : (userLanguage === 'uk' ? 'Завантаження...' : 'Loading...');
+					statusEl.innerHTML = `<div class="spinner-small"></div> ${loadingText}`;
+				}
+
 				const fd = new FormData();
 				fd.append('file', file);
 				if (file.lastModified) fd.append('file_last_modified', file.lastModified);
 
 				try {
-					// Отрисуем временную карточку
-					const tempId = 'temp_' + Date.now() + '_' + i;
-					const container = document.getElementById('queueList');
-					if (container.innerHTML.includes('Очередь пуста')) container.innerHTML = '';
-					
-					const tempHtml = `
-						<div class="q-card blurred" id="${tempId}">
-							<img src="${URL.createObjectURL(file)}" class="q-thumb">
-							<div class="q-info">
-								<div class="q-title">${escapeHtml(file.name)}</div>
-								<div class="q-status"><div class="spinner-small"></div> Загрузка...</div>
-							</div>
-						</div>
-					`;
-					container.insertAdjacentHTML('afterbegin', tempHtml);
-
 					const res = await WebAppAPI.request('/receipts/queue', 'POST', fd);
 					if (!res || !res.success) throw new Error(res.error || 'Upload failed');
 					
+					// После успешной загрузки удаляем временную карточку
+					const cardEl = document.getElementById(tempId);
+					if (cardEl) cardEl.remove();
+
 				} catch (e) {
 					console.error(e);
-					alert('Ошибка загрузки файла ' + file.name + ': ' + e.message);
+					const errAlert = (userLanguage === 'ru' ? 'Ошибка загрузки файла ' : 'Upload error for ') + file.name + ': ' + e.message;
+					alert(errAlert);
+					const cardEl = document.getElementById(tempId);
+					if (cardEl) {
+						const errText = userLanguage === 'ru' ? 'Ошибка' : 'Error';
+						cardEl.querySelector('.q-status').innerHTML = `<span style="color:#ef4444">${errText}</span>`;
+					}
 				}
 			}
 			
@@ -461,14 +485,14 @@ I18n::load($userLanguage);
 		}
 
 		async function deleteQueueItem(id) {
-			if (!confirm('Удалить чек из очереди?')) return;
+			if (!confirm(userLanguage === 'ru' ? 'Удалить чек из очереди?' : 'Delete from queue?')) return;
 			try {
 				const res = await WebAppAPI.request('/receipts/queue/' + id, 'DELETE');
 				if (res && res.success) {
 					fetchQueue();
 				}
 			} catch(e) {
-				alert('Ошибка удаления: ' + e.message);
+				alert((userLanguage === 'ru' ? 'Ошибка удаления: ' : 'Delete error: ') + e.message);
 			}
 		}
 
@@ -532,9 +556,9 @@ I18n::load($userLanguage);
 			const payment_method = document.getElementById('f_payment_method').value;
 			const comment = document.getElementById('f_comment').value;
 
-			if (!place_id) return alert('Выберите объект!');
-			if (!date) return alert('Укажите дату!');
-			if (!amount || isNaN(parseFloat(amount))) return alert('Укажите корректную сумму (Итого)!');
+			if (!place_id) return alert(userLanguage === 'ru' ? 'Выберите объект!' : 'Select Workplace!');
+			if (!date) return alert(userLanguage === 'ru' ? 'Укажите дату!' : 'Enter date!');
+			if (!amount || isNaN(parseFloat(amount))) return alert(userLanguage === 'ru' ? 'Укажите корректную сумму!' : 'Enter correct amount!');
 
 			const btn = document.getElementById('btnSaveReceipt');
 			btn.disabled = true;
@@ -601,7 +625,7 @@ I18n::load($userLanguage);
 				
 				let html = '';
 				if (items.length === 0 && page === 1) {
-					html = '<div style="text-align:center;color:#888;padding:2rem;">Чеков не найдено</div>';
+					html = '<div style="text-align:center;color:#888;padding:2rem;">' + (userLanguage === 'ru' ? 'Чеков не найдено' : 'No receipts found') + '</div>';
 				} else {
 					items.forEach(r => {
 						html += `
@@ -719,15 +743,15 @@ I18n::load($userLanguage);
 			const worksType = document.getElementById('objAddWorksType').value;
 			
 			if (!name) {
-				window.Telegram.WebApp.showAlert('Введите или выберите название объекта');
+				window.Telegram.WebApp.showAlert(userLanguage === 'ru' ? 'Введите название объекта' : 'Enter object name');
 				return;
 			}
 			if (!address) {
-				window.Telegram.WebApp.showAlert('Выберите полный адрес из подсказок');
+				window.Telegram.WebApp.showAlert(userLanguage === 'ru' ? 'Выберите адрес' : 'Select address');
 				return;
 			}
 			if (!worksType) {
-				window.Telegram.WebApp.showAlert('Выберите тип работ');
+				window.Telegram.WebApp.showAlert(userLanguage === 'ru' ? 'Выберите тип работ' : 'Select work type');
 				return;
 			}
 
@@ -752,7 +776,7 @@ I18n::load($userLanguage);
 
 				const res = await response.json();
 				if (res.success) {
-					window.Telegram.WebApp.showAlert('Объект успешно добавлен!');
+					window.Telegram.WebApp.showAlert(userLanguage === 'ru' ? 'Объект успешно добавлен!' : 'Object added!');
 					closeObjectModal();
 				} else {
 					window.Telegram.WebApp.showAlert(res.error || 'Ошибка при сохранении');
