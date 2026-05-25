@@ -59,11 +59,11 @@ if (isset($update['message'])) {
     I18n::load($lang);
 
     if ($text === '/start') {
-        // Передаем язык и параметр версии (anti-cache) в WebApp через GET
-        $webAppWt = WEBAPP_URL_WT . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.23';
-        $webAppReceipts = WEBAPP_URL_RECEIPTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.23';
-        $webAppHistory = WEBAPP_URL_HISTORY . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.23';
-        $webAppObjects = WEBAPP_URL_OBJECTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.23';
+		// Передаем язык и параметр версии (anti-cache) в WebApp через GET
+		$webAppWt = WEBAPP_URL_WT . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.30';
+		$webAppReceipts = WEBAPP_URL_RECEIPTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.30';
+		$webAppHistory = WEBAPP_URL_HISTORY . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.30';
+		$webAppObjects = WEBAPP_URL_OBJECTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.30';
         
         $role = $resAuth['data']['role'] ?? 'user';
 

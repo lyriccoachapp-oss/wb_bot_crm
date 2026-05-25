@@ -74,6 +74,8 @@
             "instruction_title": "How it works:",
             "instruction_text": "Select a photo of the receipt. It will be placed in the recognition queue. Wait for completion (status will change), click on it, check the data and click \"Save\".",
             "btn_upload": "Take Photo / Upload",
+            "btn_camera": "Camera",
+            "btn_gallery": "Gallery",
             "tab_upload": "Add Receipts",
             "tab_list": "Receipts List",
             "warning_text": "<strong>Warning!</strong> Upload receipts with good internet connection.",

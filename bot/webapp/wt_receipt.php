@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.26';
+$APP_VERSION = '1.0.30';
 
 // Подключаем i18n
 require_once('../lib/i18n.php');
@@ -83,6 +83,17 @@ I18n::load($userLanguage);
 
 		.app-version{ position:fixed; top:2px; right:3px; font-size:6px; line-height:1; color:#000; opacity:.45; z-index:1000; pointer-events:none;}
 		@keyframes spin{to{transform:rotate(360deg)}}
+
+		/* Контейнер для двух кнопок в одной строке */
+		.btn-row {
+			display: flex;
+			gap: 0.8rem;
+			margin-bottom: 1.5rem;
+		}
+		.btn-row .btn {
+			flex: 1;
+			margin: 0;
+		}
 	</style>
 	<script src="https://telegram.org/js/telegram-web-app.js"></script>
 	<script src="auth.js?v=<?= $APP_VERSION ?>"></script>
@@ -95,24 +106,34 @@ I18n::load($userLanguage);
 	</div>
 
 		<div class="tabs">
-		<div class="tab active" onclick="switchTab('upload')"><?= ($userLanguage === 'ru' ? 'Добавить чеки' : ($userLanguage === 'uk' ? 'Додати чеки' : 'Add Receipts')) ?></div>
-		<div class="tab" onclick="switchTab('list')"><?= ($userLanguage === 'ru' ? 'Список чеков' : ($userLanguage === 'uk' ? 'Список чеків' : 'Receipts List')) ?></div>
+		<div class="tab active" onclick="switchTab('upload')"><?= __('webapp.receipts.tab_upload') ?></div>
+		<div class="tab" onclick="switchTab('list')"><?= __('webapp.receipts.tab_list') ?></div>
 	</div>
 
 	<!-- Вкладка Загрузка -->
 	<div id="tab-upload" class="tab-content active">
 		<div class="warning-box">
-			<?= ($userLanguage === 'ru' ? '<strong>Внимание!</strong> Загружайте чеки при хорошем интернете.' : '<strong>Warning!</strong> Upload receipts with good internet connection.') ?>
+			<?= __('webapp.receipts.warning_text') ?>
 		</div>
 		<div class="instruction-box">
-			<b><?= ($userLanguage === 'ru' ? 'Как это работает:' : ($userLanguage === 'uk' ? 'Як це працює:' : 'How it works:')) ?></b> <?= ($userLanguage === 'ru' ? 'Выберите фото чека. Он станет в очередь на распознавание. Дождитесь окончания (статус изменится), нажмите на него, проверьте данные и нажмите "Сохранить".' : ($userLanguage === 'uk' ? 'Оберіть фото чека. Він стане в чергу на розпізнавання. Дочекайтеся закінчення (статус зміниться), натисніть на нього, перевірте дані та натисніть "Зберегти".' : 'Select a photo of the receipt. It will be placed in the recognition queue. Wait for completion (status will change), click on it, check the data and click "Save".')) ?>
+			<b><?= __('webapp.receipts.instruction_title') ?></b> <?= __('webapp.receipts.instruction_text') ?>
 		</div>
 
-		<input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileSelect(event)" multiple>
-		<button class="btn" onclick="document.getElementById('fileInput').click()">
-			<svg style="vertical-align:middle;margin-right:8px;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-			<?= ($userLanguage === 'ru' ? 'Сфотографировать / Загрузить' : ($userLanguage === 'uk' ? 'Сфотографувати / Завантажити' : 'Take Photo / Upload')) ?>
-		</button>
+		<!-- Входы для файлов: один с capture="environment" для прямого вызова камеры, другой с multiple для галереи -->
+		<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleFileSelect(event)">
+		<input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleFileSelect(event)" multiple>
+		
+		<!-- Две кнопки в одном ряду: Камера и Галерея -->
+		<div class="btn-row">
+			<button class="btn" onclick="document.getElementById('cameraInput').click()">
+				<svg style="vertical-align:middle;margin-right:8px;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+				<?= __('webapp.receipts.btn_camera') ?>
+			</button>
+			<button class="btn btn-outline" onclick="document.getElementById('galleryInput').click()">
+				<svg style="vertical-align:middle;margin-right:8px;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+				<?= __('webapp.receipts.btn_gallery') ?>
+			</button>
+		</div>
 
 		<div class="queue-list" id="queueList">
 			<!-- Карточки очереди -->
