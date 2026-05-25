@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.31';
+$APP_VERSION = '1.0.32';
 
 // Подключаем i18n
 require_once('../lib/i18n.php');
@@ -119,8 +119,8 @@ I18n::load($userLanguage);
 			<b><?= __('webapp.receipts.instruction_title') ?></b> <?= __('webapp.receipts.instruction_text') ?>
 		</div>
 
-		<!-- Входы для файлов: один с capture="environment" для прямого вызова камеры, другой с multiple для галереи -->
-		<input type="file" id="cameraInput" accept="image/*" capture="environment" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="handleFileSelect(event)">
+		<!-- Входы для файлов: один с capture для прямого вызова камеры, другой с multiple для галереи -->
+		<input type="file" id="cameraInput" accept="image/*" capture style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="handleFileSelect(event)">
 		<input type="file" id="galleryInput" accept="image/*" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="handleFileSelect(event)" multiple>
 		
 		<!-- Две кнопки в одном ряду: Камера и Галерея -->
