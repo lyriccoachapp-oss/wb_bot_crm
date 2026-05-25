@@ -60,10 +60,10 @@ if (isset($update['message'])) {
 
     if ($text === '/start') {
 		// Передаем язык и параметр версии (anti-cache) в WebApp через GET
-		$webAppWt = WEBAPP_URL_WT . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.32';
-		$webAppReceipts = WEBAPP_URL_RECEIPTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.32';
-		$webAppHistory = WEBAPP_URL_HISTORY . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.32';
-		$webAppObjects = WEBAPP_URL_OBJECTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.32';
+		$webAppWt = WEBAPP_URL_WT . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.33';
+		$webAppReceipts = WEBAPP_URL_RECEIPTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.33';
+		$webAppHistory = WEBAPP_URL_HISTORY . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.33';
+		$webAppObjects = WEBAPP_URL_OBJECTS . '?u_id=' . $chatId . '&lang=' . $lang . '&v=1.0.33';
         
         $role = $resAuth['data']['role'] ?? 'user';
 

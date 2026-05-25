@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.32';
+$APP_VERSION = '1.0.33';
 
 // Подключаем i18n
 require_once('../lib/i18n.php');
@@ -56,7 +56,8 @@ I18n::load($userLanguage);
 
 		/* Список истории */
 		.history-list { display: flex; flex-direction: column; gap: 0.5rem; }
-		.h-card { background: #fff; border-radius: var(--radius); padding: 0.8rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+		.h-card { background: #fff; border-radius: var(--radius); padding: 0.8rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; transition: background-color 0.15s ease; }
+		.h-card:active { background: #f8fafc; }
 		.h-info { display: flex; flex-direction: column; gap: 0.2rem; }
 		.h-date { font-size: 0.8rem; color: #666; }
 		.h-place { font-weight: 600; font-size: 0.95rem; }
@@ -220,6 +221,73 @@ I18n::load($userLanguage);
 		</div>
 	</div>
 
+	<!-- Модалка просмотра сохраненного чека -->
+	<div id="historyModalOverlay" style="position:fixed;top:0;left:0;right:0;bottom:5rem;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:999;padding:1rem;box-sizing:border-box">
+		<div id="historyModalContent" style="background:#fff;width:100%;max-width:400px;padding:1.5rem;border-radius:var(--radius);box-shadow:0 4px 20px rgba(0,0,0,.15);max-height:100%;overflow:auto">
+			<h3 style="margin-top:0;margin-bottom:1.5rem;font-size:1.2rem;"><?= ($userLanguage === 'ru' ? 'Информация о чеке' : ($userLanguage === 'uk' ? 'Інформація про чек' : 'Receipt Details')) ?></h3>
+			
+			<div class="detail-row" style="margin-bottom: 0.8rem;">
+				<div style="font-size:0.85rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Объект' : ($userLanguage === 'uk' ? 'Об\'єкт' : 'Object')) ?></div>
+				<div id="h_detail_place" style="font-weight:600;font-size:1rem;color:#1e293b;"></div>
+			</div>
+
+			<div style="display:flex;gap:1rem;margin-bottom: 0.8rem;">
+				<div style="flex:1;">
+					<div style="font-size:0.85rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Дата' : 'Date') ?></div>
+					<div id="h_detail_date" style="font-weight:500;color:#1e293b;"></div>
+				</div>
+				<div style="flex:1;">
+					<div style="font-size:0.85rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Время' : ($userLanguage === 'uk' ? 'Час' : 'Time')) ?></div>
+					<div id="h_detail_time" style="font-weight:500;color:#1e293b;"></div>
+				</div>
+			</div>
+
+			<div class="detail-row" style="margin-bottom: 0.8rem;">
+				<div style="font-size:0.85rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Мерчант' : 'Merchant') ?></div>
+				<div id="h_detail_merchant" style="font-weight:500;color:#1e293b;"></div>
+			</div>
+
+			<div class="detail-row" style="margin-bottom: 0.8rem; display:none;" id="h_detail_address_container">
+				<div style="font-size:0.85rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Адрес' : ($userLanguage === 'uk' ? 'Адреса' : 'Address')) ?></div>
+				<div id="h_detail_address" style="font-size:0.9rem;color:#1e293b;"></div>
+			</div>
+
+			<div style="display:flex;gap:0.5rem;margin-bottom: 1rem;background:#f8fafc;padding:0.8rem;border-radius:8px;">
+				<div style="flex:1;text-align:center;">
+					<div style="font-size:0.75rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Без налогов' : ($userLanguage === 'uk' ? 'Без податків' : 'Subtotal')) ?></div>
+					<div id="h_detail_subtotal" style="font-weight:600;color:#475569;margin-top:2px;"></div>
+				</div>
+				<div style="flex:1;text-align:center;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+					<div style="font-size:0.75rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Налог' : ($userLanguage === 'uk' ? 'Податок' : 'Tax')) ?></div>
+					<div id="h_detail_tax" style="font-weight:600;color:#475569;margin-top:2px;"></div>
+				</div>
+				<div style="flex:1;text-align:center;">
+					<div style="font-size:0.75rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Итого' : ($userLanguage === 'uk' ? 'Всього' : 'Total')) ?></div>
+					<div id="h_detail_amount" style="font-weight:700;color:#0f172a;font-size:1.05rem;margin-top:2px;"></div>
+				</div>
+			</div>
+
+			<div style="display:flex;gap:1rem;margin-bottom: 1.5rem;">
+				<div style="flex:1;">
+					<div style="font-size:0.85rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Оплата' : ($userLanguage === 'uk' ? 'Оплата' : 'Payment')) ?></div>
+					<div id="h_detail_payment" style="font-weight:500;color:#1e293b;"></div>
+				</div>
+				<div style="flex:1;">
+					<div style="font-size:0.85rem;color:#64748b;"><?= ($userLanguage === 'ru' ? 'Категория' : ($userLanguage === 'uk' ? 'Категорія' : 'Category')) ?></div>
+					<div id="h_detail_category" style="font-weight:500;color:#1e293b;"></div>
+				</div>
+			</div>
+
+			<div class="modal-buttons" style="display:flex;gap:0.8rem;margin-top:1.5rem;">
+				<button class="btn btn-outline" style="flex:1;" onclick="closeHistoryModal()"><?= ($userLanguage === 'ru' ? 'Закрыть' : ($userLanguage === 'uk' ? 'Закрити' : 'Close')) ?></button>
+				<a id="h_detail_link" href="#" target="_blank" class="btn" style="flex:1;display:flex;align-items:center;justify-content:center;text-decoration:none;gap:6px;">
+					<svg style="vertical-align:middle;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+					<?= ($userLanguage === 'ru' ? 'Файл чека' : ($userLanguage === 'uk' ? 'Файл чека' : 'View File')) ?>
+				</a>
+			</div>
+		</div>
+	</div>
+
 	<!-- Нижнее меню -->
 	<?php include 'nav.php'; ?>
 
@@ -271,6 +339,7 @@ I18n::load($userLanguage);
 		let pollInterval = null;
 		let historyPage = 1;
 		let currentUserId = null;
+		let historyItems = [];
 
 		function switchTab(tabId) {
 			document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -565,6 +634,72 @@ I18n::load($userLanguage);
 			document.getElementById('modalOverlay').style.display = 'none';
 		}
 
+		// Вспомогательные функции для модалки просмотра чеков
+		function getPaymentMethodText(method) {
+			if (method === 'card') {
+				return userLanguage === 'ru' ? 'Карта' : (userLanguage === 'uk' ? 'Карта' : 'Card');
+			}
+			if (method === 'cash') {
+				return userLanguage === 'ru' ? 'Наличные' : (userLanguage === 'uk' ? 'Готівка' : 'Cash');
+			}
+			return method || '';
+		}
+
+		function getCategoryText(cat) {
+			const cats = {
+				materials: userLanguage === 'ru' ? 'Материалы' : (userLanguage === 'uk' ? 'Матеріали' : 'Materials'),
+				fuel: userLanguage === 'ru' ? 'Топливо' : (userLanguage === 'uk' ? 'Паливо' : 'Fuel'),
+				tools: userLanguage === 'ru' ? 'Инструменты' : (userLanguage === 'uk' ? 'Інструменти' : 'Tools'),
+				restaurant: userLanguage === 'ru' ? 'Обед' : (userLanguage === 'uk' ? 'Обід' : 'Restaurant'),
+				groceries: userLanguage === 'ru' ? 'Продукты' : (userLanguage === 'uk' ? 'Продукти' : 'Groceries'),
+				other: userLanguage === 'ru' ? 'Другое' : (userLanguage === 'uk' ? 'Інше' : 'Other')
+			};
+			return cats[cat] || cat || '';
+		}
+
+		function openHistoryModal(id) {
+			const item = historyItems.find(h => h.id == id);
+			if (!item) return;
+
+			document.getElementById('h_detail_place').textContent = item.place_name || (userLanguage === 'ru' ? 'Неизвестно' : 'Unknown');
+			document.getElementById('h_detail_date').textContent = item.date || '';
+			document.getElementById('h_detail_time').textContent = item.time || '--:--';
+			document.getElementById('h_detail_merchant').textContent = item.merchant_name || (userLanguage === 'ru' ? 'Без мерчанта' : 'No merchant');
+			
+			if (item.merchant_address) {
+				document.getElementById('h_detail_address').textContent = item.merchant_address;
+				document.getElementById('h_detail_address_container').style.display = 'block';
+			} else {
+				document.getElementById('h_detail_address_container').style.display = 'none';
+			}
+
+			document.getElementById('h_detail_subtotal').textContent = item.subtotal ? '$' + parseFloat(item.subtotal).toFixed(2) : '-';
+			document.getElementById('h_detail_tax').textContent = item.tax ? '$' + parseFloat(item.tax).toFixed(2) : '-';
+			document.getElementById('h_detail_amount').textContent = '$' + parseFloat(item.amount).toFixed(2);
+			
+			document.getElementById('h_detail_payment').textContent = getPaymentMethodText(item.payment_method);
+			document.getElementById('h_detail_category').textContent = getCategoryText(item.category);
+
+			const linkEl = document.getElementById('h_detail_link');
+			if (item.gdrive_url) {
+				linkEl.href = item.gdrive_url;
+				linkEl.style.display = 'flex';
+			} else {
+				linkEl.style.display = 'none';
+			}
+
+			document.getElementById('historyModalOverlay').style.display = 'flex';
+			
+			// Легкая вибрация при открытии на мобильных
+			if (window.Telegram?.WebApp?.HapticFeedback) {
+				window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+			}
+		}
+
+		function closeHistoryModal() {
+			document.getElementById('historyModalOverlay').style.display = 'none';
+		}
+
 		async function saveReceipt() {
 			const id = document.getElementById('f_queue_id').value;
 			const place_id = document.getElementById('f_place').value;
@@ -643,6 +778,13 @@ I18n::load($userLanguage);
 				const res = await WebAppAPI.request(url);
 				const extractArray = (res) => Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : (res?.data?.items || res?.data?.data || res?.items || []));
 				const items = extractArray(res);
+
+				// Сохраняем чеки истории для модалки просмотра
+				if (page === 1) {
+					historyItems = items;
+				} else {
+					historyItems = historyItems.concat(items);
+				}
 				
 				let html = '';
 				if (items.length === 0 && page === 1) {
@@ -650,7 +792,7 @@ I18n::load($userLanguage);
 				} else {
 					items.forEach(r => {
 						html += `
-							<div class="h-card">
+							<div class="h-card" onclick="openHistoryModal(${r.id})">
 								<div class="h-info">
 									<div class="h-place">${escapeHtml(r.place_name || 'Неизвестно')}</div>
 									<div class="h-date">${escapeHtml(r.date)} &bull; ${escapeHtml(r.merchant_name || 'Без мерчанта')}</div>

@@ -4,7 +4,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 // Устанавливаем язык по умолчанию
 $langParam = isset($userLanguage) ? $userLanguage : 'en';
 // Версия приложения для сброса кэша статики
-$versionParam = '1.0.32';
+$versionParam = '1.0.33';
 
 // Краткая функция для перевода в меню
 function _menu($key) {
