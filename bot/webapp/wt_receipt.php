@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.33';
+$APP_VERSION = '1.0.34';
 
 // Подключаем i18n
 require_once('../lib/i18n.php');
@@ -700,6 +700,21 @@ I18n::load($userLanguage);
 			document.getElementById('historyModalOverlay').style.display = 'none';
 		}
 
+		function openHistoryReceipt(id) {
+			const item = historyItems.find(h => h.id == id);
+			if (!item) return;
+
+			if (item.gdrive_url) {
+				if (window.Telegram?.WebApp?.openLink) {
+					window.Telegram.WebApp.openLink(item.gdrive_url);
+				} else {
+					window.open(item.gdrive_url, '_blank');
+				}
+			} else {
+				openHistoryModal(id);
+			}
+		}
+
 		async function saveReceipt() {
 			const id = document.getElementById('f_queue_id').value;
 			const place_id = document.getElementById('f_place').value;
@@ -792,7 +807,7 @@ I18n::load($userLanguage);
 				} else {
 					items.forEach(r => {
 						html += `
-							<div class="h-card" onclick="openHistoryModal(${r.id})">
+							<div class="h-card" onclick="openHistoryReceipt(${r.id})">
 								<div class="h-info">
 									<div class="h-place">${escapeHtml(r.place_name || 'Неизвестно')}</div>
 									<div class="h-date">${escapeHtml(r.date)} &bull; ${escapeHtml(r.merchant_name || 'Без мерчанта')}</div>

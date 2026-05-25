@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.33';
+$APP_VERSION = '1.0.34';
 
 // Подключаем i18n
 require_once('../lib/i18n.php');
