@@ -42,7 +42,27 @@ if (isset($update['message'])) {
     }
     
     $firstName = $message['from']['first_name'] ?? 'Employee';
-    
+
+	// Команда /hi для любого пользователя (даже незарегистрированного)
+	if ($text === '/hi') {
+		if ($lang === 'ru') {
+			$reply = "👋 <b>Привет, {$firstName}!</b>\n\n";
+			$reply .= "Твой Telegram ID: <code>{$chatId}</code> (нажми, чтобы скопировать)\n\n";
+			$reply .= "Отправь этот ID администратору, чтобы тебя зарегистрировали в системе.";
+		} elseif ($lang === 'uk') {
+			$reply = "👋 <b>Привіт, {$firstName}!</b>\n\n";
+			$reply .= "Твій Telegram ID: <code>{$chatId}</code> (натисни, щоб скопіювати)\n\n";
+			$reply .= "Надішли цей ID адміністратору, чтобы тебя зареєстрували в системі.";
+		} else {
+			$reply = "👋 <b>Hello, {$firstName}!</b>\n\n";
+			$reply .= "Your Telegram ID: <code>{$chatId}</code> (click to copy)\n\n";
+			$reply .= "Send this ID to your administrator to register you in the system.";
+		}
+
+		$telegram->sendMessage($chatId, $reply);
+		exit;
+	}
+
     // Проверим, зарегистрирован ли пользователь в CRM
     $resAuth = $api->get('auth/me', $chatId);
     
