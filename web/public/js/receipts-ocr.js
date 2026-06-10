@@ -637,6 +637,17 @@ function openEditModal(card) {
 	activeCard = card;
 	isImageModified = false;
 
+	// Подставляем значения из глобальных селекторов, если они выбраны и в карточке пусто
+	if ((!card.data.receipt_org || card.data.receipt_org === '0') && globCompany && globCompany.value) {
+		card.data.receipt_org = globCompany.value;
+	}
+	if ((!card.data.id_telegram || card.data.id_telegram === '0') && globEmployee && globEmployee.value) {
+		card.data.id_telegram = globEmployee.value;
+	}
+	if ((!card.data.place_id || card.data.place_id === '0') && globObject && globObject.value) {
+		card.data.place_id = globObject.value;
+	}
+
 	// Подготовка картинки
 	emImg.src = card.url;
 
