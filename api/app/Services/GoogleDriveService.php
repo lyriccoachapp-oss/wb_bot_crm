@@ -184,6 +184,47 @@ class GoogleDriveService
 	}
 
 	/**
+	 * Удалить файл с Google Drive
+	 *
+	 * @param  string $fileId ID файла на Drive
+	 * @return bool
+	 */
+	public function deleteFile(string $fileId): bool
+	{
+		try {
+			$this->getDrive()->files->delete($fileId);
+			Log::info('GDrive: файл удален', ['id' => $fileId]);
+			return true;
+		} catch (\Exception $e) {
+			Log::error('GDrive: ошибка удаления файла', [
+				'id'    => $fileId,
+				'error' => $e->getMessage(),
+			]);
+			return false;
+		}
+	}
+
+	/**
+	 * Скачать файл с Google Drive
+	 *
+	 * @param  string $fileId ID файла на Drive
+	 * @return string|null    Контент файла
+	 */
+	public function downloadFile(string $fileId): ?string
+	{
+		try {
+			$response = $this->getDrive()->files->get($fileId, ['alt' => 'media']);
+			return $response->getBody()->getContents();
+		} catch (\Exception $e) {
+			Log::error('GDrive: ошибка скачивания файла', [
+				'id'    => $fileId,
+				'error' => $e->getMessage(),
+			]);
+			return null;
+		}
+	}
+
+	/**
 	 * Получить публичную ссылку на файл
 	 *
 	 * @param  string $fileId  ID файла на Drive

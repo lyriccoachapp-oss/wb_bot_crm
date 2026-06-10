@@ -22,16 +22,20 @@ class ApiClient
         }
     }
 
-    public function setToken(string $token): void
+    public function setToken(string $token, ?string $refreshToken = null): void
     {
         $this->token = $token;
         $_SESSION['api_token'] = $token;
+        if ($refreshToken) {
+            $_SESSION['refresh_token'] = $refreshToken;
+        }
     }
 
     public function clearToken(): void
     {
         $this->token = null;
         unset($_SESSION['api_token']);
+        unset($_SESSION['refresh_token']);
         unset($_SESSION['user_info']);
     }
 
@@ -124,6 +128,14 @@ class ApiClient
 
         // Если токен истек
         if ($httpCode === 401) {
+            // Пробуем обновить токен по refresh_token (избегаем бесконечной рекурсии)
+            if (!str_ends_with($url, '/auth/refresh')) {
+                if ($this->tryRefresh()) {
+                    // Токен успешно обновлен, повторяем исходный запрос
+                    return $this->request($method, $url, $data);
+                }
+            }
+
             $this->clearToken();
             if (!headers_sent()) {
                 header('Location: /?route=login');
@@ -132,5 +144,52 @@ class ApiClient
         }
 
         return $decoded;
+    }
+
+    /**
+     * Попытаться обновить access токен через API
+     */
+    private function tryRefresh(): bool
+    {
+        $refreshToken = $_SESSION['refresh_token'] ?? null;
+        if (!$refreshToken) {
+            return false;
+        }
+
+        $ch = curl_init();
+        $url = $this->baseUrl . '/auth/refresh';
+        
+        $headers = [
+            'Accept: application/json',
+            'Content-Type: application/json',
+        ];
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'refresh_token' => $refreshToken
+        ]));
+        
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200 || !$response) {
+            return false;
+        }
+
+        $decoded = json_decode($response, true);
+        if ($decoded && ($decoded['success'] ?? false) && !empty($decoded['data']['access_token'])) {
+            $this->setToken($decoded['data']['access_token'], $decoded['data']['refresh_token'] ?? null);
+            return true;
+        }
+
+        return false;
     }
 }

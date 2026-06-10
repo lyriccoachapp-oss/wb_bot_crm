@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		]);
 
 		if ($response['success'] ?? false) {
-			$api->setToken($response['data']['access_token']);
+			$api->setToken($response['data']['access_token'], $response['data']['refresh_token'] ?? null);
 			$_SESSION['user_info'] = $response['data']['user'];
 			header('Location: /?route=dashboard');
 			exit;

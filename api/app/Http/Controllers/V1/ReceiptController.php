@@ -210,15 +210,107 @@ class ReceiptController extends Controller
 			return $this->error('Чек не найден.', 404);
 		}
 
-		$updated = $this->receiptRepo->update($receipt, $request->only([
-			'place_id', 'receipt_date', 'receipt_time',
-			'merchant_name', 'merchant_address',
-			'receipt_amount', 'subtotal', 'tax', 'currency',
-			'payment_method', 'card_last4', 'receipt_type',
-			'items_json',
-		]));
+		$data = [];
+		if ($request->has('place_id'))       $data['id_place']        = $request->input('place_id');
+		if ($request->has('receipt_date'))   $data['receipt_date']    = $request->input('receipt_date');
+		if ($request->has('receipt_time'))   $data['receipt_time']    = $request->input('receipt_time');
+		if ($request->has('merchant_name'))  $data['merchant_name']   = $request->input('merchant_name');
+		if ($request->has('merchant_address')) $data['merchant_address'] = $request->input('merchant_address');
+		if ($request->has('receipt_amount')) $data['receipt_amount']  = $request->input('receipt_amount');
+		if ($request->has('subtotal'))       $data['amount_subtotal'] = $request->input('subtotal');
+		if ($request->has('tax'))            $data['amount_tax']      = $request->input('tax');
+		if ($request->has('payment_method')) $data['payment_method']  = $request->input('payment_method');
+		if ($request->has('card_last4'))     $data['card_last4']      = $request->input('card_last4');
+		if ($request->has('receipt_type'))   $data['receipt_type']    = $request->input('receipt_type');
+		if ($request->has('comment'))        $data['comment']         = $request->input('comment');
+		if ($request->has('receipt_org'))    $data['receipt_org']     = $request->input('receipt_org');
+		if ($request->has('id_telegram'))    $data['id_telegram']     = $request->input('id_telegram');
+
+		// Если прислано новое изображение (файл) при обновлении сохраненного чека
+		if ($request->hasFile('file')) {
+			$file = $request->file('file');
+			$dir  = storage_path('uploads/receipts');
+			$name = uniqid('rcpt_') . '.' . $file->getClientOriginalExtension();
+			$path = $dir . '/' . $name;
+
+			if (!is_dir($dir)) mkdir($dir, 0755, true);
+			$file->move($dir, $name);
+
+			// Загружаем новое фото на Google Drive
+			$gdriveId = $this->driveService->uploadFile(
+				$path,
+				$name,
+				"Чек от " . ($receipt->botUser ? trim($receipt->botUser->firstname . ' ' . $receipt->botUser->lastname) : 'Пользователь') . " (" . date('Y-m-d H:i') . ")"
+			);
+
+			if ($gdriveId) {
+				// Удаляем старое фото с Google Drive
+				if ($receipt->gdrive_id) {
+					$this->driveService->deleteFile($receipt->gdrive_id);
+				}
+				$data['gdrive_id'] = $gdriveId;
+			}
+
+			// Локальный файл удаляем
+			if (file_exists($path)) {
+				@unlink($path);
+			}
+		}
+
+		$updated = $this->receiptRepo->update($receipt, $data);
 
 		return $this->success($this->formatReceipt($updated), 'Чек обновлён.');
+	}
+
+	/**
+	 * DELETE /api/v1/receipts/{id}
+	 *
+	 * Удалить чек.
+	 */
+	public function destroy(int $id): JsonResponse
+	{
+		$receipt = $this->receiptRepo->findById($id);
+
+		if (!$receipt) {
+			return $this->error('Чек не найден.', 404);
+		}
+
+		// Удаляем файл с Google Drive, если он есть
+		if ($receipt->gdrive_id) {
+			$this->driveService->deleteFile($receipt->gdrive_id);
+		}
+
+		$this->receiptRepo->delete($receipt);
+
+		return $this->success(null, 'Чек успешно удалён.');
+	}
+
+	/**
+	 * GET /api/v1/receipts/{id}/image
+	 *
+	 * Скачать фото чека с Google Drive и отдать пользователю.
+	 */
+	public function image(int $id)
+	{
+		$receipt = $this->receiptRepo->findById($id);
+
+		if (!$receipt) {
+			return $this->error('Чек не найден.', 404);
+		}
+
+		if (!$receipt->gdrive_id) {
+			return $this->error('Изображение отсутствует на Google Drive.', 404);
+		}
+
+		$content = $this->driveService->downloadFile($receipt->gdrive_id);
+		if (!$content) {
+			return $this->error('Не удалось скачать изображение.', 500);
+		}
+
+		return response($content, 200, [
+			'Content-Type' => 'image/jpeg',
+			'Cache-Control' => 'max-age=86400, public',
+		]);
 	}
 
 	/**

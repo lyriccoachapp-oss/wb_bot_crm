@@ -156,6 +156,27 @@ class ReceiptQueueController extends Controller
             return response()->json(['success' => false, 'error' => 'Возможно это дубликат! Чек с такой же датой, временем и суммой уже существует в базе.'], 409);
         }
 
+		// Если прислан новый файл (например, обрезанный/повернутый), обновляем локальный файл
+		if ($request->hasFile('file')) {
+			$file = $request->file('file');
+			$dir = storage_path('app/receipts_queue');
+			$name = $queueItem->local_path ?: (uniqid('rcpt_') . '.' . $file->getClientOriginalExtension());
+			$localFilePath = $dir . '/' . $name;
+
+			if (file_exists($localFilePath)) {
+				@unlink($localFilePath);
+			}
+			$file->move($dir, $name);
+
+			DB::table('receipts_queue')->where('id', $id)->update([
+				'local_path' => $name,
+				'updated_at' => now(),
+			]);
+
+			// Обновляем данные элемента в памяти
+			$queueItem = DB::table('receipts_queue')->where('id', $id)->first();
+		}
+
         // 1. Загружаем в Google Drive
         $gdriveId = null;
         if ($queueItem->local_path) {
@@ -208,6 +229,65 @@ class ReceiptQueueController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Чек успешно сохранен']);
     }
+
+	/**
+	 * POST /api/v1/receipts/queue/{id}/rerun
+	 * Запустить распознавание чека заново (возможно с обновленным изображением)
+	 */
+	public function rerun(Request $request, int $id): JsonResponse
+	{
+		$user = $request->auth_user;
+		$queueItem = DB::table('receipts_queue')->where('id', $id)->where('user_id', $user->id)->first();
+
+		if (!$queueItem) {
+			return response()->json(['success' => false, 'error' => 'Элемент очереди не найден'], 404);
+		}
+
+		// Если прислан новый файл (например, обрезанный/повернутый), обновляем локальный файл
+		if ($request->hasFile('file')) {
+			$validator = Validator::make($request->all(), [
+				'file' => 'required|file|mimes:jpg,jpeg,png,webp|max:20480',
+			]);
+
+			if ($validator->fails()) {
+				return response()->json(['success' => false, 'error' => $validator->errors()->first()], 422);
+			}
+
+			$file = $request->file('file');
+			$dir = storage_path('app/receipts_queue');
+			$name = $queueItem->local_path ?: (uniqid('rcpt_') . '.' . $file->getClientOriginalExtension());
+			$localFilePath = $dir . '/' . $name;
+
+			if (file_exists($localFilePath)) {
+				@unlink($localFilePath);
+			}
+			$file->move($dir, $name);
+
+			DB::table('receipts_queue')->where('id', $id)->update([
+				'local_path' => $name,
+			]);
+			$queueItem->local_path = $name;
+		}
+
+		if (!$queueItem->local_path) {
+			return response()->json(['success' => false, 'error' => 'Файл отсутствует'], 400);
+		}
+
+		$localFilePath = storage_path('app/receipts_queue/' . $queueItem->local_path);
+
+		// Сбрасываем статус и очищаем parsed_data/error_message
+		DB::table('receipts_queue')->where('id', $id)->update([
+			'status' => 'pending',
+			'parsed_data' => null,
+			'error_message' => null,
+			'updated_at' => now(),
+		]);
+
+		// Запускаем распознавание заново
+		dispatch(new ProcessReceiptOcr($id, $localFilePath, null));
+
+		return response()->json(['success' => true, 'message' => 'Распознавание запущено заново']);
+	}
 
     /**
      * DELETE /api/v1/receipts/queue/{id}

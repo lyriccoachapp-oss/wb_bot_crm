@@ -95,7 +95,11 @@ $pagination = [
 				<div class="card">
 					<div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
 						<h2 style="margin: 0;">Список объектов</h2>
-						<button class="btn btn-primary btn-sm" onclick="openObjModal()">+ Добавить объект</button>
+						<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+							<button type="button" class="btn btn-success btn-sm" onclick="exportObjects('xlsx')">Экспорт в XLSX</button>
+							<button type="button" class="btn btn-secondary btn-sm" onclick="exportObjects('csv')">Экспорт в CSV</button>
+							<button class="btn btn-primary btn-sm" onclick="openObjModal()">+ Добавить объект</button>
+						</div>
 					</div>
 					<div class="table-container">
 						<table>
@@ -353,6 +357,35 @@ $pagination = [
 			}
 		}
 		updateThemeIcon(document.documentElement.getAttribute('data-theme') || 'dark');
+
+		async function authDownload(url, filename, btn) {
+			try {
+				const oldText = btn.innerText;
+				btn.innerText = 'Генерация...'; btn.disabled = true;
+
+				const res = await fetch(url, { headers: { 'Authorization': 'Bearer <?= $_SESSION["api_token"] ?? "" ?>' } });
+				if (!res.ok) { alert('Ошибка скачивания'); btn.innerText = oldText; btn.disabled = false; return; }
+				const blob = await res.blob();
+				const dl = document.createElement('a');
+				dl.href = window.URL.createObjectURL(blob);
+				dl.download = filename;
+				document.body.appendChild(dl);
+				dl.click(); dl.remove();
+				btn.innerText = oldText; btn.disabled = false;
+			} catch(e) { alert('Ошибка сети при скачивании'); btn.innerText = oldText; btn.disabled = false; }
+		}
+
+		function exportObjects(format) {
+			const btn = event.target;
+			const urlParams = new URLSearchParams(window.location.search);
+			urlParams.delete('page');
+			urlParams.delete('limit');
+			
+			const query = urlParams.toString();
+			const url = '/api/v1/objects/export/' + format + (query ? '?' + query : '');
+			const dateStr = new Date().toISOString().split('T')[0];
+			authDownload(url, 'objects_export_' + dateStr + '.' + format, btn);
+		}
 	</script>
 </body>
 </html>

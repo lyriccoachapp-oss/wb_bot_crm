@@ -9,6 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use App\Models\BotUser;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Контроллер пользователей
@@ -210,5 +216,140 @@ class UserController extends Controller
 			'role'   => $updated->role?->slug,
 			'status' => $updated->status,
 		], 'Пользователь обновлён.');
+	}
+
+	/**
+	 * GET /api/v1/users/export/xlsx
+	 *
+	 * Экспорт отфильтрованных пользователей в формат XLSX.
+	 */
+	public function exportXlsx(Request $request)
+	{
+		$filters = [];
+		if ($request->has('status')) {
+			$filters['status'] = $request->query('status');
+		}
+		if ($request->has('company_slug')) {
+			$filters['company_slug'] = $request->query('company_slug');
+		}
+		if ($request->has('search')) {
+			$filters['search'] = $request->query('search');
+		}
+
+		$sort = [];
+		if ($request->has('sort_by')) {
+			$sort['by'] = $request->query('sort_by');
+			$sort['dir'] = $request->query('sort_dir', 'asc');
+		}
+
+		$users = $this->userRepo->all($filters, $sort);
+
+		$spreadsheet = new Spreadsheet();
+		$sheet       = $spreadsheet->getActiveSheet();
+		$sheet->setTitle('Пользователи');
+
+		// Заголовки столбцов
+		$headers = ['ID', 'Telegram ID', 'Telegram Username', 'Имя', 'Фамилия', 'Email', 'Телефон', 'SIN Номер', 'Адрес', 'Компания', 'Роль', 'Статус'];
+		foreach ($headers as $colIdx => $header) {
+			$colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
+			$sheet->setCellValue($colLetter . '1', $header);
+		}
+
+		// Стилизуем шапку
+		$sheet->getStyle('A1:L1')->getFont()->setBold(true);
+		$sheet->getStyle('A1:L1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE0E0E0');
+		$sheet->getStyle('A1:L1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+		// Заполняем данные
+		$row = 2;
+		foreach ($users as $u) {
+			$sheet->setCellValue('A' . $row, $u->id);
+			$sheet->setCellValue('B' . $row, $u->id_telegram ?: '');
+			$sheet->setCellValue('C' . $row, $u->username ?: '');
+			$sheet->setCellValue('D' . $row, $u->firstname ?: '');
+			$sheet->setCellValue('E' . $row, $u->lastname ?: '');
+			$sheet->setCellValue('F' . $row, $u->email ?: '');
+			$sheet->setCellValue('G' . $row, $u->phone ?: '');
+			$sheet->setCellValue('H' . $row, $u->sin_num ?: '');
+			$sheet->setCellValue('I' . $row, $u->addr ?: '');
+			$sheet->setCellValue('J' . $row, $u->company ? $u->company->name : ($u->company_slug ?: ''));
+			$sheet->setCellValue('K' . $row, $u->role ? $u->role->name : '');
+			$sheet->setCellValue('L' . $row, $u->status ?: '');
+			$row++;
+		}
+
+		// Автоширина столбцов
+		foreach (range(1, 12) as $colIdx) {
+			$colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+			$sheet->getColumnDimension($colLetter)->setAutoSize(true);
+		}
+
+		// Сетка границ
+		$sheet->getStyle('A1:L' . ($row - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+		// Сохраняем во временный файл
+		$tmpPath = tempnam(sys_get_temp_dir(), 'export_users_xlsx');
+		(new Xlsx($spreadsheet))->save($tmpPath);
+
+		return response()->download($tmpPath, 'users_export_' . date('Y-m-d') . '.xlsx', [
+			'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		])->deleteFileAfterSend(true);
+	}
+
+	/**
+	 * GET /api/v1/users/export/csv
+	 *
+	 * Экспорт отфильтрованных пользователей в формат CSV.
+	 */
+	public function exportCsv(Request $request)
+	{
+		$filters = [];
+		if ($request->has('status')) {
+			$filters['status'] = $request->query('status');
+		}
+		if ($request->has('company_slug')) {
+			$filters['company_slug'] = $request->query('company_slug');
+		}
+		if ($request->has('search')) {
+			$filters['search'] = $request->query('search');
+		}
+
+		$sort = [];
+		if ($request->has('sort_by')) {
+			$sort['by'] = $request->query('sort_by');
+			$sort['dir'] = $request->query('sort_dir', 'asc');
+		}
+
+		$users = $this->userRepo->all($filters, $sort);
+
+		$tmpPath = tempnam(sys_get_temp_dir(), 'export_users_csv');
+		$fp = fopen($tmpPath, 'w');
+
+		// Добавим BOM для поддержки кириллицы в Excel
+		fprintf($fp, chr(0xEF).chr(0xBB).chr(0xBF));
+
+		fputcsv($fp, ['ID', 'Telegram ID', 'Telegram Username', 'Имя', 'Фамилия', 'Email', 'Телефон', 'SIN Номер', 'Адрес', 'Компания', 'Роль', 'Статус'], ",", "\"", "\\");
+
+		foreach ($users as $u) {
+			fputcsv($fp, [
+				$u->id,
+				$u->id_telegram ?: '',
+				$u->username ?: '',
+				$u->firstname ?: '',
+				$u->lastname ?: '',
+				$u->email ?: '',
+				$u->phone ?: '',
+				$u->sin_num ?: '',
+				$u->addr ?: '',
+				$u->company ? $u->company->name : ($u->company_slug ?: ''),
+				$u->role ? $u->role->name : '',
+				$u->status ?: ''
+			], ",", "\"", "\\");
+		}
+		fclose($fp);
+
+		return response()->download($tmpPath, 'users_export_' . date('Y-m-d') . '.csv', [
+			'Content-Type' => 'text/csv; charset=UTF-8',
+		])->deleteFileAfterSend(true);
 	}
 }

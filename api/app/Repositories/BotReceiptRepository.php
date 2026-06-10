@@ -67,6 +67,14 @@ class BotReceiptRepository
 	}
 
 	/**
+	 * Удалить чек
+	 */
+	public function delete(BotReceipt $receipt): bool
+	{
+		return $receipt->delete();
+	}
+
+	/**
 	 * Получить чеки для отчёта
 	 *
 	 * @param  array $filters

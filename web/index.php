@@ -35,6 +35,25 @@ switch ($route) {
         break;
 
     
+    case 'refresh-token':
+		header('Content-Type: application/json');
+		$refreshToken = $_SESSION['refresh_token'] ?? '';
+		if (!$refreshToken) {
+			http_response_code(401);
+			echo json_encode(['success' => false, 'error' => 'No refresh token']);
+			exit;
+		}
+		$response = $api->post('/auth/refresh', ['refresh_token' => $refreshToken]);
+		if ($response['success'] ?? false) {
+			$api->setToken($response['data']['access_token'], $response['data']['refresh_token'] ?? null);
+			echo json_encode(['success' => true, 'access_token' => $response['data']['access_token']]);
+		} else {
+			$api->clearToken();
+			http_response_code(401);
+			echo json_encode(['success' => false, 'error' => $response['error'] ?? 'Refresh failed']);
+		}
+		exit;
+
     case 'logout':
         $api->post('/auth/logout');
         $api->clearToken();

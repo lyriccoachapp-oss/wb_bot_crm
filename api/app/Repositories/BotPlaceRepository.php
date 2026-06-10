@@ -40,6 +40,33 @@ class BotPlaceRepository
 	}
 
 	/**
+	 * Получить все отфильтрованные объекты (для экспорта)
+	 */
+	public function all(array $filters = [], array $sort = []): \Illuminate\Support\Collection
+	{
+		$query = BotPlace::query();
+
+		if (isset($filters['active']) && $filters['active'] !== '') {
+			$query->where('active', (int)$filters['active']);
+		}
+
+		if (!empty($filters['search'])) {
+			$s = '%' . $filters['search'] . '%';
+			$query->where('place_name', 'LIKE', $s);
+		}
+
+		if (!empty($sort['by'])) {
+			$dir = (!empty($sort['dir']) && strtolower($sort['dir']) === 'desc') ? 'desc' : 'asc';
+			$col = $sort['by'] === 'id' ? 'id_place' : $sort['by'];
+			$query->orderBy($col, $dir);
+		} else {
+			$query->orderBy('place_name');
+		}
+
+		return $query->get();
+	}
+
+	/**
 	 * Найти объект по ID
 	 */
 	public function findById(int $id): ?BotPlace

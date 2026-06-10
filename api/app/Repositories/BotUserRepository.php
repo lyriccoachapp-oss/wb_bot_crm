@@ -85,6 +85,44 @@ class BotUserRepository
 	}
 
 	/**
+	 * Получить всех отфильтрованных пользователей (для экспорта)
+	 */
+	public function all(array $filters = [], array $sort = []): \Illuminate\Support\Collection
+	{
+		$query = BotUser::with(['role', 'company']);
+
+		if (!empty($filters['status'])) {
+			$query->where('status', $filters['status']);
+		}
+		if (!empty($filters['company_slug'])) {
+			if ($filters['company_slug'] === '__none__') {
+				$query->whereNull('company_slug');
+			} else {
+				$query->where('company_slug', $filters['company_slug']);
+			}
+		}
+
+		if (!empty($filters['search'])) {
+			$s = '%' . $filters['search'] . '%';
+			$query->where(function($q) use ($s) {
+				$q->where('firstname', 'LIKE', $s)
+				  ->orWhere('lastname', 'LIKE', $s)
+				  ->orWhere('email', 'LIKE', $s)
+				  ->orWhere('username', 'LIKE', $s);
+			});
+		}
+
+		if (!empty($sort['by'])) {
+			$dir = (!empty($sort['dir']) && strtolower($sort['dir']) === 'desc') ? 'desc' : 'asc';
+			$query->orderBy($sort['by'], $dir);
+		} else {
+			$query->orderBy('lastname')->orderBy('firstname');
+		}
+
+		return $query->get();
+	}
+
+	/**
 	 * Получить список зарегистрированных сотрудников (для справочника OCR)
 	 */
 	public function getEmployeesList(): array

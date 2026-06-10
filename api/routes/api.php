@@ -63,6 +63,8 @@ Route::prefix('v1')->middleware('api.auth')->group(function () {
 
 	// Пользователи (только roles.manage или users.view)
 	Route::prefix('users')->middleware('permission:users.view')->group(function () {
+		Route::get('/export/xlsx', [UserController::class, 'exportXlsx']);
+		Route::get('/export/csv',  [UserController::class, 'exportCsv']);
 		Route::get('/',    [UserController::class, 'index']);
 		Route::get('/{id}', [UserController::class, 'show']);
 		Route::post('/', [UserController::class, 'store'])->middleware('permission:users.manage');
@@ -93,6 +95,7 @@ Route::prefix('v1')->middleware('api.auth')->group(function () {
 	Route::post('receipts/queue', [App\Http\Controllers\V1\ReceiptQueueController::class, 'enqueue']);
 	Route::get('receipts/queue/{id}/image', [App\Http\Controllers\V1\ReceiptQueueController::class, 'image']);
 	Route::post('receipts/queue/{id}/save', [App\Http\Controllers\V1\ReceiptQueueController::class, 'save']);
+	Route::post('receipts/queue/{id}/rerun', [App\Http\Controllers\V1\ReceiptQueueController::class, 'rerun']);
 	Route::delete('receipts/queue/{id}', [App\Http\Controllers\V1\ReceiptQueueController::class, 'destroy']);
 
 	// Чеки (старые роуты, если нужны)
@@ -102,6 +105,8 @@ Route::prefix('v1')->middleware('api.auth')->group(function () {
 
 	// Объекты
 	Route::prefix('objects')->middleware('permission:objects.view')->group(function () {
+		Route::get('/export/xlsx', [ObjectController::class, 'exportXlsx']);
+		Route::get('/export/csv',  [ObjectController::class, 'exportCsv']);
 		Route::get('/',     [ObjectController::class, 'index']);
 		Route::get('/{id}', [ObjectController::class, 'show']);
 		Route::post('/', [ObjectController::class, 'store'])->middleware('permission:objects.manage');
@@ -126,10 +131,12 @@ Route::prefix('v1')->middleware('api.auth')->group(function () {
 	Route::prefix('receipts')->group(function () {
 		Route::get('/',     [ReceiptController::class, 'index']);
 		Route::get('/{id}', [ReceiptController::class, 'show']);
+		Route::get('/{id}/image', [ReceiptController::class, 'image'])->middleware('permission:receipts.manage');
 		Route::post('/',    [ReceiptController::class, 'store']);
 		Route::post('/recognize', [ReceiptController::class, 'recognize']);
 		Route::post('/upload', [ReceiptController::class, 'upload']);
 		Route::put('/{id}', [ReceiptController::class, 'update'])->middleware('permission:receipts.manage');
+		Route::delete('/{id}', [ReceiptController::class, 'destroy'])->middleware('permission:receipts.manage');
 	});
 
 	// Отчёты (только admin)

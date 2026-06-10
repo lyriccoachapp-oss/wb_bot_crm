@@ -1,3 +1,82 @@
+const TRANSLATIONS = {
+	ru: {
+		confirm_delete: "Вы уверены, что хотите окончательно удалить этот чек? Это действие удалит изображение с Google Drive и запись из базы данных.",
+		delete_success: "Чек успешно удален!",
+		delete_error: "Ошибка при удалении: ",
+		save_success: "Чек успешно обновлен!",
+		save_error: "Ошибка при сохранении: ",
+		error: "Ошибка",
+		deleting: "Удаление...",
+		saving: "Сохранение...",
+		org_required: "Ошибка: Пожалуйста, выберите Компанию перед сохранением.",
+		emp_required: "Ошибка: Пожалуйста, выберите Сотрудника перед сохранением.",
+		obj_required: "Ошибка: Пожалуйста, выберите Объект перед сохранением.",
+	},
+	uk: {
+		confirm_delete: "Ви впевнені, що хочете остаточно видалити цей чек? Ця дія видалить зображення з Google Drive та запис з бази даних.",
+		delete_success: "Чек успішно видалено!",
+		delete_error: "Помилка при видаленні: ",
+		save_success: "Чек успішно оновлено!",
+		save_error: "Помилка при збереженні: ",
+		error: "Помилка",
+		deleting: "Видалення...",
+		saving: "Збереження...",
+		org_required: "Помилка: Будь ласка, виберіть Компанію перед збереженням.",
+		emp_required: "Помилка: Будь ласка, виберіть Співробітника перед збереженням.",
+		obj_required: "Помилка: Будь ласка, виберіть Об'єкт перед збереженням.",
+	},
+	en: {
+		confirm_delete: "Are you sure you want to permanently delete this receipt? This action will delete the image from Google Drive and the record from the database.",
+		delete_success: "Receipt deleted successfully!",
+		delete_error: "Error deleting: ",
+		save_success: "Receipt updated successfully!",
+		save_error: "Error saving: ",
+		error: "Error",
+		deleting: "Deleting...",
+		saving: "Saving...",
+		org_required: "Error: Please select a Company before saving.",
+		emp_required: "Error: Please select an Employee before saving.",
+		obj_required: "Error: Please select an Object before saving.",
+	}
+};
+
+function __(key) {
+	const lang = window.CURRENT_LANG || 'ru';
+	return (TRANSLATIONS[lang] || TRANSLATIONS['ru'])[key] || key;
+}
+
+async function apiFetch(url, options = {}) {
+	if (!options.headers) {
+		options.headers = {};
+	}
+	options.headers['Authorization'] = 'Bearer ' + localStorage.getItem('access_token');
+	options.headers['Accept'] = 'application/json';
+
+	try {
+		let response = await fetch(url, options);
+
+		if (response.status === 401) {
+			// Попытка обновить токен через PHP-сессию
+			const refreshResponse = await fetch('/?route=refresh-token');
+			if (refreshResponse.ok) {
+				const refreshData = await refreshResponse.json();
+				if (refreshData.success && refreshData.access_token) {
+					localStorage.setItem('access_token', refreshData.access_token);
+					options.headers['Authorization'] = 'Bearer ' + refreshData.access_token;
+					return await fetch(url, options);
+				}
+			}
+			window.location.href = '/?route=logout';
+			throw new Error('Unauthorized');
+		}
+
+		return response;
+	} catch (error) {
+		console.error('API request failed:', error);
+		throw error;
+	}
+}
+
 /* ========================= JS — Блок 10: переменные/ссылки ========================= */
 const picker = document.getElementById('picker');
 const tasks = document.getElementById('tasks');
@@ -18,7 +97,14 @@ const emImg = document.getElementById('emImg');
 const emLens = document.getElementById('emLens');
 const emRotate = document.getElementById('emRotate');
 const emRerun = document.getElementById('emRerun');
+const emCrop = document.getElementById('emCrop');
+const emReset = document.getElementById('emReset');
+const emApply = document.getElementById('emApply');
 const emForm = document.getElementById('emForm');
+
+let cropperInstance = null;
+let isImageModified = false;
+let isCroppingActive = false;
 
 let EMP=[], OBJ=[], COMP=[], refReady=false;
 let pollInterval = null;
@@ -38,15 +124,9 @@ function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<
 (async function loadRefs(){
   if (!refInfo) return; // if not on tab
   try{
-    const reqOpts = { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token'), 'Accept': 'application/json' } };
-    const eFetch = await fetch('/api/v1/references/employees', reqOpts);
-    const oFetch = await fetch('/api/v1/references/objects', reqOpts);
-    const cFetch = await fetch('/api/v1/references/companies', reqOpts);
-    
-    if (eFetch.status === 401 || oFetch.status === 401 || cFetch.status === 401) {
-        window.location.href = '/?route=logout';
-        return;
-    }
+    const eFetch = await apiFetch('/api/v1/references/employees');
+    const oFetch = await apiFetch('/api/v1/references/objects');
+    const cFetch = await apiFetch('/api/v1/references/companies');
 
     if (!eFetch.ok) throw new Error('Employees API Error: ' + eFetch.status);
     if (!oFetch.ok) throw new Error('Objects API Error: ' + oFetch.status);
@@ -177,16 +257,10 @@ async function uploadToQueue(file, tempId, tempCard) {
         if (globEmployee) fd.append('global_employee', globEmployee.value);
         if (globObject) fd.append('global_object', globObject.value);
 
-        const r = await fetch('/api/v1/receipts/queue', {
+        const r = await apiFetch('/api/v1/receipts/queue', {
             method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
-                'Accept': 'application/json'
-            },
             body: fd
         });
-
-        if (r.status === 401) { window.location.href = '/?route=logout'; return; }
         const data = await r.json();
         
         if (!data.success) throw new Error(data.error || 'Upload error');
@@ -219,10 +293,26 @@ async function uploadToQueue(file, tempId, tempCard) {
         
         incUploaded();
         pollQueue(); // Сразу опрашиваем очередь
-    } catch (err) {
-        tempCard.querySelector('.cc-status').textContent = 'Ошибка загрузки: ' + err.message;
-        tempCard.querySelector('.cc-status').className = 'cc-status text-danger';
-    }
+	} catch (err) {
+		tempCard.querySelector('.cc-status').textContent = 'Ошибка загрузки: ' + err.message;
+		tempCard.querySelector('.cc-status').className = 'cc-status text-danger';
+		tempCard.classList.remove('blurred');
+
+		// Добавляем кнопку удаления, чтобы пользователь мог убрать битую карточку с экрана
+		if (!tempCard.querySelector('.cc-actions')) {
+			const actions = document.createElement('div');
+			actions.className = 'cc-actions';
+			actions.innerHTML = `
+				<button class="cc-btn-del" title="Удалить"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+			`;
+			tempCard.appendChild(actions);
+
+			actions.querySelector('.cc-btn-del').addEventListener('click', (e) => {
+				e.stopPropagation();
+				tempCard.remove();
+			});
+		}
+	}
 }
 
 function startPolling() {
@@ -232,13 +322,7 @@ function startPolling() {
 
 async function pollQueue() {
     try {
-        const r = await fetch('/api/v1/receipts/queue', {
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
-                'Accept': 'application/json'
-            }
-        });
-        if (r.status === 401) { window.location.href = '/?route=logout'; return; }
+        const r = await apiFetch('/api/v1/receipts/queue');
         const data = await r.json();
         if (data.success) {
             renderQueue(data.data);
@@ -355,14 +439,9 @@ function buildCardState(id, el, item) {
 async function receipt_delete(card) {
     card.statusText.textContent = 'Удаление...';
     try {
-        const r = await fetch(`/api/v1/receipts/queue/${card.id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
-                'Accept': 'application/json'
-            }
+        const r = await apiFetch(`/api/v1/receipts/queue/${card.id}`, {
+            method: 'DELETE'
         });
-        if (r.status === 401) { window.location.href = '/?route=logout'; return; }
         // Удаление из DOM произойдет при следующем pollQueue, 
         // но чтобы интерфейс реагировал мгновенно:
         card.el.remove();
@@ -454,86 +533,418 @@ function updateCardFromItem(card, item) {
 /* ========================= JS — Блок 17: Модальное окно и Лупа ========================= */
 let activeCard = null;
 
+function editSavedReceipt(receipt) {
+	const token = localStorage.getItem('access_token');
+	const imgUrl = `/api/v1/receipts/${receipt.id}/image?token=${token}`;
+	
+	const cardState = {
+		id: receipt.id,
+		isSavedReceipt: true, // Флаг, что это сохраненный чек
+		rotateQuarterTurns: 0,
+		url: imgUrl,
+		data: {
+			receipt_org: receipt.receipt_org || '',
+			id_telegram: receipt.telegram_id || '',
+			place_id: receipt.place_id || '',
+			merchant_name: receipt.merchant_name || '',
+			merchant_address: receipt.merchant_address || '',
+			payment_method: receipt.payment_method || '',
+			card_last4: receipt.card_last4 || '',
+			receipt_date: receipt.date || '',
+			receipt_time: receipt.time || '',
+			subtotal: receipt.subtotal || '',
+			tax: receipt.tax || '',
+			receipt_amount: receipt.amount || '',
+			receipt_type: receipt.category || '',
+			currency: receipt.currency || 'CAD',
+			comment: receipt.comment || '',
+			items_json: receipt.items_json || '[]',
+			ocr_text: receipt.ocr_text || ''
+		}
+	};
+
+	openEditModal(cardState);
+}
+
+function initCropper(card) {
+	if (cropperInstance) {
+		cropperInstance.destroy();
+		cropperInstance = null;
+	}
+	isCroppingActive = false;
+	if (emCrop) emCrop.classList.remove('active');
+	if (emApply) emApply.style.display = 'none';
+
+	// Сбрасываем CSS-трансформы с превью
+	emImg.style.transform = 'none';
+
+	// Инициализируем Cropper.js
+	cropperInstance = new Cropper(emImg, {
+		viewMode: 1,
+		dragMode: 'move', // По умолчанию перетаскивание картинки
+		autoCrop: false,  // Сначала без рамки обрезки
+		responsive: true,
+		restore: false,
+		checkCrossOrigin: false,
+		ready() {
+			// Если у карточки сохранен поворот, поворачиваем в кроппере
+			if (card && card.rotateQuarterTurns) {
+				cropperInstance.rotate(card.rotateQuarterTurns * 90);
+			}
+		},
+		crop(event) {
+			// Проверяем, изменились ли размеры/координаты рамки относительно исходных
+			const data = cropperInstance.getData();
+			const imageInfo = cropperInstance.getImageData();
+
+			const rotated = data.rotate !== 0;
+			const cropped = Math.abs(data.width - imageInfo.naturalWidth) > 5 || 
+							Math.abs(data.height - imageInfo.naturalHeight) > 5 ||
+							Math.abs(data.x) > 5 ||
+							Math.abs(data.y) > 5;
+
+			if (rotated || (isCroppingActive && cropped)) {
+				isImageModified = true;
+			}
+		}
+	});
+}
+
+function getModifiedBlob() {
+	return new Promise((resolve) => {
+		if (!cropperInstance || !isImageModified) {
+			resolve(null);
+			return;
+		}
+
+		const canvas = cropperInstance.getCroppedCanvas({
+			imageSmoothingEnabled: true,
+			imageSmoothingQuality: 'high'
+		});
+
+		if (!canvas) {
+			resolve(null);
+			return;
+		}
+
+		canvas.toBlob((blob) => {
+			resolve(blob);
+		}, 'image/jpeg', 0.9);
+	});
+}
+
 function openEditModal(card) {
-    activeCard = card;
-    
-    // Подготовка картинки
-    emImg.src = card.url;
-    emImg.style.transform = `rotate(${card.rotateQuarterTurns * 90}deg)`;
-    
-    // Заполнение формы
-    const form = emForm;
-    for (const key in card.data) {
-        const input = form.querySelector(`[name="${key}"]`);
-        if (input) input.value = card.data[key];
-    }
-    
-    setupMagnifier(card);
-    editModal.classList.add('open');
+	activeCard = card;
+	isImageModified = false;
+
+	// Подготовка картинки
+	emImg.src = card.url;
+
+	// Заполнение формы
+	const form = emForm;
+	for (const key in card.data) {
+		const input = form.querySelector(`[name="${key}"]`);
+		if (input) input.value = card.data[key];
+	}
+
+	// Показываем/скрываем кнопки удаления и перераспознавания
+	const emDelete = document.getElementById('emDelete');
+	if (emDelete) {
+		if (card.isSavedReceipt) {
+			emDelete.style.display = 'inline-block';
+		} else {
+			emDelete.style.display = 'none';
+		}
+	}
+
+	if (emRerun) {
+		emRerun.style.display = 'inline-block'; // Всегда показываем перераспознавание
+	}
+
+	// Ждем загрузки изображения для инициализации Cropper
+	emImg.onload = () => {
+		initCropper(card);
+		setupMagnifier(card);
+		emImg.onload = null;
+	};
+
+	if (emImg.complete) {
+		initCropper(card);
+		setupMagnifier(card);
+		emImg.onload = null;
+	}
+
+	editModal.classList.add('open');
 }
 
 function closeEditModal() {
-    editModal.classList.remove('open');
-    activeCard = null;
-    emLens.style.display = 'none';
+	if (cropperInstance) {
+		cropperInstance.destroy();
+		cropperInstance = null;
+	}
+	editModal.classList.remove('open');
+	activeCard = null;
+	emLens.style.display = 'none';
 }
 
 if (emClose) emClose.addEventListener('click', closeEditModal);
 
 if (emSave) {
-    emSave.addEventListener('click', async () => {
-        if (!activeCard) return;
-        // Переносим данные из формы обратно в state
-        const form = emForm;
-        for (const key in activeCard.data) {
-            const input = form.querySelector(`[name="${key}"]`);
-            if (input) activeCard.data[key] = input.value;
-        }
-        
-        if (!activeCard.data.receipt_org || activeCard.data.receipt_org === '0') {
-            alert('Ошибка: Пожалуйста, выберите Компанию перед сохранением.');
-            return;
-        }
-        if (!activeCard.data.id_telegram || activeCard.data.id_telegram === '0') {
-            alert('Ошибка: Пожалуйста, выберите Сотрудника перед сохранением.');
-            return;
-        }
-        if (!activeCard.data.place_id || activeCard.data.place_id === '0') {
-            alert('Ошибка: Пожалуйста, выберите Объект перед сохранением.');
-            return;
-        }
-        
-        const oldText = emSave.innerText;
-        emSave.innerText = 'Сохранение...';
-        emSave.disabled = true;
+	emSave.addEventListener('click', async () => {
+		if (!activeCard) return;
+		// Переносим данные из формы обратно в state
+		const form = emForm;
+		for (const key in activeCard.data) {
+			const input = form.querySelector(`[name="${key}"]`);
+			if (input) activeCard.data[key] = input.value;
+		}
+		
+		if (!activeCard.data.receipt_org || activeCard.data.receipt_org === '0') {
+			alert(__('org_required'));
+			return;
+		}
+		if (!activeCard.data.id_telegram || activeCard.data.id_telegram === '0') {
+			alert(__('emp_required'));
+			return;
+		}
+		if (!activeCard.data.place_id || activeCard.data.place_id === '0') {
+			alert(__('obj_required'));
+			return;
+		}
+		
+		const oldText = emSave.innerText;
+		emSave.innerText = __('saving');
+		emSave.disabled = true;
 
-        const success = await receipt_save(activeCard);
-        
-        emSave.innerText = oldText;
-        emSave.disabled = false;
+		const success = await receipt_save(activeCard);
+		
+		emSave.innerText = oldText;
+		emSave.disabled = false;
 
-        if (success) {
-            closeEditModal();
-        }
-    });
+		if (success) {
+			closeEditModal();
+		}
+	});
+}
+
+const emDelete = document.getElementById('emDelete');
+if (emDelete) {
+	emDelete.addEventListener('click', async () => {
+		if (!activeCard || !activeCard.isSavedReceipt) return;
+		
+		if (confirm(__('confirm_delete'))) {
+			const oldText = emDelete.innerText;
+			emDelete.innerText = __('deleting');
+			emDelete.disabled = true;
+			
+			try {
+				const r = await apiFetch(`/api/v1/receipts/${activeCard.id}`, {
+					method: 'DELETE'
+				});
+				
+				const data = await r.json();
+				if (!data.success) throw new Error(data.error || 'Delete failed');
+				
+				alert(__('delete_success'));
+				closeEditModal();
+				window.location.reload();
+			} catch (err) {
+				alert(__('delete_error') + (err.message || err));
+				emDelete.innerText = oldText;
+				emDelete.disabled = false;
+			}
+		}
+	});
 }
 
 if (emRotate) {
-    emRotate.addEventListener('click', () => {
-        if (!activeCard) return;
-        activeCard.rotateQuarterTurns = (activeCard.rotateQuarterTurns + 1) % 4;
-        emImg.style.transform = `rotate(${activeCard.rotateQuarterTurns * 90}deg)`;
-    });
+	emRotate.addEventListener('click', () => {
+		if (!cropperInstance) return;
+		cropperInstance.rotate(90);
+		isImageModified = true;
+		if (activeCard) {
+			activeCard.rotateQuarterTurns = (activeCard.rotateQuarterTurns + 1) % 4;
+		}
+	});
+}
+
+if (emCrop) {
+	emCrop.addEventListener('click', () => {
+		if (!cropperInstance) return;
+		if (!isCroppingActive) {
+			cropperInstance.crop();
+			cropperInstance.setDragMode('crop');
+			isCroppingActive = true;
+			emCrop.classList.add('active');
+			if (emApply) emApply.style.display = 'inline-block';
+			if (emLens) emLens.style.display = 'none';
+		} else {
+			cropperInstance.clear();
+			cropperInstance.setDragMode('move');
+			isCroppingActive = false;
+			emCrop.classList.remove('active');
+			if (emApply) emApply.style.display = 'none';
+		}
+	});
+}
+
+if (emApply) {
+	emApply.addEventListener('click', () => {
+		if (!cropperInstance || !isCroppingActive) return;
+
+		// Получаем обрезанное изображение
+		const canvas = cropperInstance.getCroppedCanvas({
+			imageSmoothingEnabled: true,
+			imageSmoothingQuality: 'high'
+		});
+
+		if (!canvas) return;
+
+		canvas.toBlob((blob) => {
+			if (!blob) return;
+
+			// Создаем Blob URL
+			const newUrl = URL.createObjectURL(blob);
+
+			// Деактивируем кроппер и меняем src
+			if (cropperInstance) {
+				cropperInstance.destroy();
+				cropperInstance = null;
+			}
+
+			// Устанавливаем новый src
+			emImg.src = newUrl;
+			isImageModified = true;
+			isCroppingActive = false;
+
+			if (emCrop) emCrop.classList.remove('active');
+			if (emApply) emApply.style.display = 'none';
+
+			// Инициализируем кроппер заново с новым изображением
+			emImg.onload = () => {
+				initCropper(activeCard);
+				setupMagnifier(activeCard);
+				emImg.onload = null;
+			};
+			if (emImg.complete) {
+				initCropper(activeCard);
+				setupMagnifier(activeCard);
+				emImg.onload = null;
+			}
+		}, 'image/jpeg', 0.9);
+	});
+}
+
+if (emReset) {
+	emReset.addEventListener('click', () => {
+		if (!activeCard) return;
+
+		if (cropperInstance) {
+			cropperInstance.destroy();
+			cropperInstance = null;
+		}
+
+		emImg.src = activeCard.url;
+		isCroppingActive = false;
+		isImageModified = false;
+
+		if (emCrop) emCrop.classList.remove('active');
+		if (emApply) emApply.style.display = 'none';
+		activeCard.rotateQuarterTurns = 0;
+
+		emImg.onload = () => {
+			initCropper(activeCard);
+			setupMagnifier(activeCard);
+			emImg.onload = null;
+		};
+		if (emImg.complete) {
+			initCropper(activeCard);
+			setupMagnifier(activeCard);
+			emImg.onload = null;
+		}
+	});
 }
 
 if (emRerun) {
-    emRerun.addEventListener('click', () => {
-        if (!activeCard) return;
-        closeEditModal();
-        activeCard.el.classList.add('blurred');
-        activeCard.statusText.textContent = 'В очереди (повтор)…';
-        enqueue(activeCard);
-    });
+	emRerun.addEventListener('click', async () => {
+		if (!activeCard) return;
+
+		const oldText = emRerun.innerText;
+		emRerun.innerText = 'Ожидание...';
+		emRerun.disabled = true;
+
+		try {
+			const blob = await getModifiedBlob();
+			const fd = new FormData();
+			if (blob) {
+				fd.append('file', blob, 'receipt.jpg');
+			}
+
+			if (activeCard.isSavedReceipt) {
+				if (!blob) {
+					alert('Пожалуйста, поверните или обрежьте чек перед повторным распознаванием.');
+					return;
+				}
+				// Для сохраненного чека запускаем распознавание синхронно
+				const r = await apiFetch('/api/v1/receipts/recognize', {
+					method: 'POST',
+					body: fd
+				});
+
+				const data = await r.json();
+				if (!data.success) throw new Error(data.error || 'OCR failed');
+
+				// Заполняем форму распознанными данными
+				const f = data.data.parsed || data.parsed;
+				if (f) {
+					const form = emForm;
+					const fieldsMap = {
+						merchant_name: f.merchant_name || '',
+						merchant_address: f.merchant_address || '',
+						receipt_date: f.receipt_date || '',
+						receipt_time: f.receipt_time || '',
+						subtotal: f.subtotal || '',
+						tax: f.tax || '',
+						receipt_amount: f.receipt_amount || '',
+						payment_method: f.payment_method || '',
+						card_last4: f.card_last4 || '',
+						receipt_type: f.receipt_type || '',
+						currency: f.currency || 'CAD',
+						comment: f.comment || '',
+						items_json: typeof f.items_json === 'string' ? f.items_json : JSON.stringify(f.items_json || []),
+						ocr_text: f.ocr_text || JSON.stringify(f)
+					};
+
+					for (const key in fieldsMap) {
+						activeCard.data[key] = fieldsMap[key];
+						const input = form.querySelector(`[name="${key}"]`);
+						if (input) input.value = fieldsMap[key];
+					}
+
+					alert('Чек успешно распознан! Проверьте данные и нажмите Сохранить.');
+				}
+			} else {
+				// Для чека из очереди отправляем на фоновое распознавание
+				const r = await apiFetch(`/api/v1/receipts/queue/${activeCard.id}/rerun`, {
+					method: 'POST',
+					body: fd
+				});
+
+				const data = await r.json();
+				if (!data.success) throw new Error(data.error || 'Rerun failed');
+
+				closeEditModal();
+				activeCard.el.classList.add('blurred');
+				activeCard.statusText.textContent = 'В очереди (повтор)…';
+				activeCard.data._is_mapped = false;
+			}
+		} catch (err) {
+			alert('Ошибка распознавания: ' + (err.message || err));
+		} finally {
+			emRerun.innerText = oldText;
+			emRerun.disabled = false;
+		}
+	});
 }
 
 // Лупа (Lens)
@@ -583,83 +994,126 @@ function setupMagnifier(card){
     inner.style.transform = `translate(${tx}px, ${ty}px) rotate(${deg}deg) scale(${ZOOM})`;
   }
   
-  box.onmouseenter = () => emLens.style.display = 'block';
+  box.onmouseenter = () => {
+    if (isCroppingActive) {
+      emLens.style.display = 'none';
+      return;
+    }
+    emLens.style.display = 'block';
+  };
   box.onmouseleave = () => emLens.style.display = 'none';
-  box.onmousemove = updateLens;
+  box.onmousemove = (e) => {
+    if (isCroppingActive) {
+      emLens.style.display = 'none';
+      return;
+    }
+    updateLens(e);
+  };
 }
 
 /* ========================= JS — Блок 18: сохранение на сервер ========================= */
 async function receipt_save(card){
-  // Check if missing, and if global has value, use it (for quick save)
-  if (!card.data.receipt_org && globCompany && globCompany.value) {
-      card.data.receipt_org = globCompany.value;
-  }
-  if (!card.data.id_telegram && globEmployee && globEmployee.value) {
-      card.data.id_telegram = globEmployee.value;
-  }
-  if (!card.data.place_id && globObject && globObject.value) {
-      card.data.place_id = globObject.value;
-  }
+	// Для обычных чеков из очереди проверяем глобальные значения
+	if (!card.isSavedReceipt) {
+		if (!card.data.receipt_org && globCompany && globCompany.value) {
+			card.data.receipt_org = globCompany.value;
+		}
+		if (!card.data.id_telegram && globEmployee && globEmployee.value) {
+			card.data.id_telegram = globEmployee.value;
+		}
+		if (!card.data.place_id && globObject && globObject.value) {
+			card.data.place_id = globObject.value;
+		}
+	}
 
-  if (!card.data.receipt_org || card.data.receipt_org === '0') {
-      alert('Ошибка: Не выбрана компания. Выберите её сверху или откройте чек для редактирования.');
-      return false;
-  }
-  if (!card.data.id_telegram || card.data.id_telegram === '0') {
-      alert('Ошибка: Не выбран сотрудник. Выберите его сверху или откройте чек для редактирования.');
-      return false;
-  }
-  if (!card.data.place_id || card.data.place_id === '0') {
-      alert('Ошибка: Не выбран объект. Выберите его сверху или откройте чек для редактирования.');
-      return false;
-  }
+	if (!card.data.receipt_org || card.data.receipt_org === '0') {
+		alert(__('org_required'));
+		return false;
+	}
+	if (!card.data.id_telegram || card.data.id_telegram === '0') {
+		alert(__('emp_required'));
+		return false;
+	}
+	if (!card.data.place_id || card.data.place_id === '0') {
+		alert(__('obj_required'));
+		return false;
+	}
 
-  card.statusText.className='cc-status text-muted';
-  card.metaEl.innerHTML = '<span class="cc-status text-muted">Сохранение…</span>';
-  card.btnSave.disabled = true;
+	if (card.statusText) {
+		card.statusText.className = 'cc-status text-muted';
+		card.statusText.textContent = __('saving');
+	}
+	if (card.metaEl) {
+		card.metaEl.innerHTML = `<span class="cc-status text-muted">${__('saving')}</span>`;
+	}
+	if (card.btnSave) {
+		card.btnSave.disabled = true;
+	}
 
-  try{
-    const fd = new FormData();
-    
-    for (const key in card.data) {
-        if (card.data[key]) {
-            fd.append(key, card.data[key]);
-        }
-    }
+	try{
+		let r;
+		const blob = await getModifiedBlob();
+		if (card.isSavedReceipt) {
+			const fd = new FormData();
+			fd.append('_method', 'PUT');
+			for (const key in card.data) {
+				if (card.data[key] !== null && card.data[key] !== undefined) {
+					fd.append(key, card.data[key]);
+				}
+			}
+			if (blob) {
+				fd.append('file', blob, 'receipt.jpg');
+			}
+			r = await apiFetch(`/api/v1/receipts/${card.id}`, {
+				method: 'POST',
+				body: fd
+			});
+		} else {
+			const fd = new FormData();
+			for (const key in card.data) {
+				if (card.data[key]) {
+					fd.append(key, card.data[key]);
+				}
+			}
+			if (blob) {
+				fd.append('file', blob, 'receipt.jpg');
+			}
+			r = await apiFetch(`/api/v1/receipts/queue/${card.id}/save`, {
+				method: 'POST',
+				body: fd
+			});
+		}
+		
+		const data = await r.json();
+		if(!data.success) throw new Error(data.error||'Save failed');
 
-    const r = await fetch(`/api/v1/receipts/queue/${card.id}/save`, {
-      method:'POST',
-      headers:{ 
-        'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
-        'Accept': 'application/json'
-      },
-      body: fd
-    });
-    
-    if (r.status === 401) { window.location.href = '/?route=logout'; return false; }
-    
-    const data = await r.json();
-    if(!data.success) throw new Error(data.error||'Save failed');
+		if (card.isSavedReceipt) {
+			alert(__('save_success'));
+			window.location.reload();
+			return true;
+		}
 
-    card.el.style.borderColor = 'var(--success-color)';
-    card.metaEl.innerHTML = '<span class="cc-status text-success">✓ Сохранено</span>';
-    card.btnSave.style.display = 'none';
-    // Disable click to open modal
-    card.el.classList.add('blurred');
-    card.el.style.opacity = '1';
-    card.el.style.filter = 'none';
-    card.el.style.pointerEvents = 'none';
-    
-    return true;
+		if (card.el) card.el.style.borderColor = 'var(--success-color)';
+		if (card.metaEl) card.metaEl.innerHTML = '<span class="cc-status text-success">✓ Сохранено</span>';
+		if (card.btnSave) card.btnSave.style.display = 'none';
+		
+		if (card.el) {
+			card.el.classList.add('blurred');
+			card.el.style.opacity = '1';
+			card.el.style.filter = 'none';
+			card.el.style.pointerEvents = 'none';
+		}
+		
+		return true;
 
-  }catch(err){
-    card.el.style.borderColor = 'var(--danger-color)';
-    const errMsg = err.message || err;
-    card.metaEl.innerHTML = '<span class="cc-status text-danger">Ошибка: ' + errMsg + '</span>';
-    card.btnSave.disabled = false;
-    alert('Ошибка при сохранении: ' + errMsg);
-    return false;
-  }
+	}catch(err){
+		const errMsg = err.message || err;
+		if (card.el) card.el.style.borderColor = 'var(--danger-color)';
+		if (card.metaEl) card.metaEl.innerHTML = `<span class="cc-status text-danger">${__('error')}: ${errMsg}</span>`;
+		if (card.btnSave) card.btnSave.disabled = false;
+		alert(__('save_error') + errMsg);
+		return false;
+	}
 }
 
 // Запускаем опрос очереди при загрузке скрипта

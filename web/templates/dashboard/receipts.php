@@ -6,10 +6,42 @@ if (empty($_SESSION['user_info'])) {
 
 $user = $_SESSION['user_info'];
 
+// Получаем списки сотрудников и объектов для фильтрации
+$empRes = $api->get('/references/employees');
+$rawEmps = $empRes['data'] ?? $empRes ?? [];
+$employees = [];
+if (is_array($rawEmps)) {
+	foreach ($rawEmps as $it) {
+		$id = $it['id_telegram'] ?? $it['telegram_id'] ?? $it['id'] ?? null;
+		$name = $it['name'] ?? $it['full_name'] ?? $it['username'] ?? null;
+		if ($id && $name) $employees[$id] = $name;
+	}
+}
+
+$objRes = $api->get('/references/objects');
+$rawObjs = $objRes['data'] ?? $objRes ?? [];
+$objects = [];
+if (is_array($rawObjs)) {
+	foreach ($rawObjs as $it) {
+		$id = $it['id'] ?? $it['id_place'] ?? null;
+		$name = $it['name'] ?? $it['place_name'] ?? null;
+		if ($id && $name) $objects[$id] = $name;
+	}
+}
+
 // Получаем список чеков через API
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$response = $api->get('/receipts', ['page' => $page, 'limit' => $limit]);
+
+$params = ['page' => $page, 'limit' => $limit];
+if (isset($_GET['telegram_id']) && $_GET['telegram_id'] !== '') {
+	$params['telegram_id'] = (int)$_GET['telegram_id'];
+}
+if (isset($_GET['place_id']) && $_GET['place_id'] !== '') {
+	$params['place_id'] = (int)$_GET['place_id'];
+}
+
+$response = $api->get('/receipts', $params);
 
 $receipts = $response['data']['items'] ?? [];
 $pagination = [
@@ -17,6 +49,19 @@ $pagination = [
 	'last_page' => $response['data']['last_page'] ?? 1,
 	'total' => $response['data']['total'] ?? 0
 ];
+
+function filterSelect($name, $options) {
+	$q = $_GET;
+	$selected = $q[$name] ?? '';
+	$html = "<select onchange=\"var q = new URLSearchParams(window.location.search); if(this.value) q.set('$name', this.value); else q.delete('$name'); q.set('page', 1); window.location.search = q.toString();\" style=\"display: block; width: 100%; margin-top: 8px; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 0.8rem; box-sizing: border-box;\">";
+	$html .= "<option value=\"\">Все</option>";
+	foreach ($options as $val => $label) {
+		$sel = (string)$val === (string)$selected ? 'selected' : '';
+		$html .= "<option value=\"".htmlspecialchars($val)."\" $sel>".htmlspecialchars($label)."</option>";
+	}
+	$html .= "</select>";
+	return $html;
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -32,6 +77,7 @@ $pagination = [
 	<link rel="stylesheet" href="/public/css/style.css?v=<?= time() ?>">
 	<link rel="stylesheet" href="/public/css/dashboard.css?v=<?= time() ?>">
 	<link rel="stylesheet" href="/public/css/components.css?v=<?= time() ?>">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 	<!-- Favicons & OpenGraph -->
 	<link rel="apple-touch-icon" sizes="180x180" href="https://workbangers.com/wp-content/themes/workbangers/img/apple-touch-icon.png">
@@ -122,7 +168,7 @@ $pagination = [
 		}
 		.ocr-grid {
 			display: grid;
-			grid-template-columns: 300px 1fr;
+			grid-template-columns: 450px 1fr;
 			gap: 1.5rem;
 		}
 		@media (max-width: 900px) {
@@ -131,7 +177,7 @@ $pagination = [
 		.preview-box {
 			position: relative;
 			width: 100%;
-			height: 260px;
+			height: 500px;
 			border: 1px solid var(--border-color);
 			border-radius: var(--radius-md);
 			background: #fff;
@@ -147,8 +193,7 @@ $pagination = [
 		.preview-box .thumb {
 			max-width: 100%;
 			max-height: 100%;
-			transition: transform 0.2s ease;
-			transform-origin: center center;
+			display: block;
 		}
 		.magnifier-lens {
 			width: 220px;
@@ -175,6 +220,11 @@ $pagination = [
 			gap: 8px;
 			flex-wrap: wrap;
 			margin-bottom: 0.5rem;
+		}
+		.ocr-media .toolbar button.active {
+			background: var(--primary-color) !important;
+			color: #fff !important;
+			border-color: var(--primary-color) !important;
 		}
 
 		/* Компактные карточки */
@@ -393,8 +443,14 @@ $pagination = [
 						<table>
 							<thead>
 								<tr>
-									<th>Сотрудник</th>
-									<th>Объект</th>
+									<th>
+										Сотрудник
+										<?= filterSelect('telegram_id', $employees) ?>
+									</th>
+									<th>
+										Объект
+										<?= filterSelect('place_id', $objects) ?>
+									</th>
 									<th>Тип затрат</th>
 									<th>Дата / Время</th>
 									<th>Сумма</th>
@@ -407,7 +463,7 @@ $pagination = [
 								<?php endif; ?>
 								
 								<?php foreach ($receipts as $r): ?>
-								<tr>
+								<tr class="clickable" onclick='editSavedReceipt(<?= htmlspecialchars(json_encode($r), ENT_QUOTES, "UTF-8") ?>)'>
 									<td><span class="cell-name"><?= htmlspecialchars($r['employee'] ?? 'Аноним') ?></span></td>
 									<td><?= htmlspecialchars($r['place_name'] ?: '—') ?></td>
 									<td>
@@ -423,7 +479,7 @@ $pagination = [
 									<td class="cell-amount text-success">$<?= number_format((float)($r['amount'] ?? 0), 2) ?></td>
 									<td style="text-align: right; padding-right: 30px;">
 										<?php if (!empty($r['gdrive_url'])): ?>
-											<button class="btn btn-sm" style="background: transparent; border: none; padding: 4px;" onclick="viewReceiptImage('<?= htmlspecialchars($r['gdrive_url']) ?>')" title="Посмотреть чек">
+											<button class="btn btn-sm" style="background: transparent; border: none; padding: 4px;" onclick="event.stopPropagation(); viewReceiptImage('<?= htmlspecialchars($r['gdrive_url']) ?>')" title="Посмотреть чек">
 												<svg width="24" height="24" fill="var(--primary-color)" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
 											</button>
 										<?php else: ?>
@@ -551,8 +607,9 @@ $pagination = [
 	  <div class="ocr-modal-content" style="width: 100%; max-width: 1200px; max-height: none;">
 		<div class="ocr-modal-toolbar" style="justify-content: space-between;">
 		  <h3 style="margin:0;">Редактирование чека</h3>
-		  <div>
-			  <button id="emSave" class="btn btn-primary btn-sm" style="margin-right: 10px;">💾 Сохранить</button>
+		  <div style="display: flex; gap: 8px; align-items: center;">
+			  <button id="emDelete" class="btn btn-danger btn-sm" style="display: none; background: #dc3545; border-color: #dc3545; color: #fff;">🗑️ Удалить</button>
+			  <button id="emSave" class="btn btn-primary btn-sm">💾 Сохранить</button>
 			  <button id="emClose" class="btn btn-secondary btn-sm">Закрыть</button>
 		  </div>
 		</div>
@@ -562,8 +619,11 @@ $pagination = [
 				  <img id="emImg" class="thumb" src="" alt="">
 				  <div id="emLens" class="magnifier-lens"></div>
 				</div>
-				<div class="toolbar">
-				  <button id="emRotate" class="btn btn-sm btn-secondary rotate">Повернуть</button>
+				<div class="toolbar" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+				  <button id="emRotate" class="btn btn-sm btn-secondary rotate">Повернуть ↻</button>
+				  <button id="emCrop" class="btn btn-sm btn-secondary crop">Обрезать</button>
+				  <button id="emApply" class="btn btn-sm btn-success apply" style="display: none; background-color: #28a745; color: #fff; border-color: #28a745;">Применить</button>
+				  <button id="emReset" class="btn btn-sm btn-secondary reset">Сбросить</button>
 				  <button id="emRerun" class="btn btn-sm btn-secondary rerun">Распознать снова</button>
 				</div>
 			</div>
@@ -632,6 +692,7 @@ $pagination = [
 
 	<script>
 		localStorage.setItem('access_token', '<?= $_SESSION['api_token'] ?? '' ?>');
+		window.CURRENT_LANG = '<?= $_SESSION['user_info']['lcode'] ?? "ru" ?>';
 		function switchTab(tabId, btn) {
 			document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
 			document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -670,6 +731,7 @@ $pagination = [
 		}
 		updateThemeIcon(document.documentElement.getAttribute('data-theme') || 'dark');
 	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 	<script src="/public/js/receipts-ocr.js?v=<?= time() ?>"></script>
 </body>
 </html>

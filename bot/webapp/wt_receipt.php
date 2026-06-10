@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Halifax');
 
-$APP_VERSION = '1.0.34';
+$APP_VERSION = '1.0.35';
 
 // Подключаем i18n
 require_once('../lib/i18n.php');
@@ -421,7 +421,7 @@ I18n::load($userLanguage);
 
 			items.forEach(item => {
 				const isPending = item.status === 'pending' || item.status === 'processing';
-				const isError = item.status === 'error';
+				const isError = item.status === 'error' || item.status === 'failed';
 				
 				let statusHtml = '';
 				if (isPending) {
@@ -522,6 +522,9 @@ I18n::load($userLanguage);
 							<div class="q-title">${escapeHtml(file.name)}</div>
 							<div class="q-status" id="status_${tempId}"><div class="spinner-small"></div> ${statusText}</div>
 						</div>
+						<div onclick="document.getElementById('${tempId}').remove(); event.stopPropagation();" style="padding:0.5rem;color:#ef4444;cursor:pointer;">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+						</div>
 					</div>
 				`;
 				container.insertAdjacentHTML('afterbegin', tempHtml);
@@ -566,6 +569,7 @@ I18n::load($userLanguage);
 					if (cardEl) {
 						const errText = userLanguage === 'ru' ? 'Ошибка' : 'Error';
 						cardEl.querySelector('.q-status').innerHTML = `<span style="color:#ef4444">${errText}</span>`;
+						cardEl.classList.remove('blurred');
 					}
 				}
 			}
