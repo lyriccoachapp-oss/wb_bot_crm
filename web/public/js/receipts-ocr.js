@@ -933,10 +933,10 @@ if (emRerun) {
 				const data = await r.json();
 				if (!data.success) throw new Error(data.error || 'Rerun failed');
 
-				closeEditModal();
 				activeCard.el.classList.add('blurred');
 				activeCard.statusText.textContent = 'В очереди (повтор)…';
 				activeCard.data._is_mapped = false;
+				closeEditModal();
 			}
 		} catch (err) {
 			alert('Ошибка распознавания: ' + (err.message || err));
